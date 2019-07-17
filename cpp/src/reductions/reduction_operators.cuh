@@ -53,6 +53,16 @@ struct ReductionMax{
     using Op = cudf::DeviceMax;
 };
 
+struct ReductionMax{
+    using Loader = IdentityLoader;
+    using Op = cudf::DeviceProduct;
+}
+
+struct ReductionStandardDev{
+    using Loader = IdentityLoader;
+    using Op = cudf::DeviceProduct;
+}
+
 } // namespace reductions
 } // namespace cudf
 

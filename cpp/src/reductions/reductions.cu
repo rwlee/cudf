@@ -187,6 +187,9 @@ gdf_scalar reduction(const gdf_column *col,
         cudf::type_dispatcher(col->dtype,
             ReduceDispatcher<cudf::reductions::ReductionSumOfSquares>(), col, &scalar);
         break;
+    case GDF_REDUCTION_STDDEV:
+        cudf::type_dispatcher(col->dtype,
+            ReduceDispatcher<cudf::reductions::ReductionStandardDev>(), col, &scalar)
     default:
         CUDF_FAIL("Unsupported reduction operator");
     }

@@ -832,7 +832,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * returning a scalar of the specified type.
    */
   public Scalar standardDeviation(DType outType) {
-    return reduction(ReductionOp.STD, outType);
+    return reduction(ReductionOp.STDDEV, outType);
   }
 
   /**

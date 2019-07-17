@@ -104,8 +104,7 @@ class ReductionTest {
         Arguments.of(ReductionOp.MIN, vals, Scalar.fromFloat(-1f)),
         Arguments.of(ReductionOp.MAX, vals, Scalar.fromFloat(123f)),
         Arguments.of(ReductionOp.PRODUCT, vals, Scalar.fromFloat(-258300000f)),
-        Arguments.of(ReductionOp.SUMOFSQUARES, vals, Scalar.fromFloat(31279f)),
-        Arguments.of(ReductionOp.STD, vals, Scalar.fromFloat(49.2453043447))
+        Arguments.of(ReductionOp.SUMOFSQUARES, vals, Scalar.fromFloat(31279f))
     );
   }
 
@@ -119,7 +118,7 @@ class ReductionTest {
         Arguments.of(ReductionOp.MIN, vals, Scalar.fromDouble(-1.)),
         Arguments.of(ReductionOp.MAX, vals, Scalar.fromDouble(123.)),
         Arguments.of(ReductionOp.PRODUCT, vals, Scalar.fromDouble(-258300000.)),
-        Arguments.of(ReductionOp.SUMOFSQUARES, vals, Scalar.fromDouble(31279.))
+        Arguments.of(ReductionOp.SUMOFSQUARES, vals, Scalar.fromDouble(31279.)),
         Arguments.of(ReductionOp.STD, vals, Scalar.fromDouble(49.2453043447))
     );
   }

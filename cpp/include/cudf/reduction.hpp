@@ -29,6 +29,7 @@ typedef enum {
   GDF_REDUCTION_MAX,            ///< Computes the maximum of all values in the column
   GDF_REDUCTION_PRODUCT,        ///< Computes the multiplicative product of all values in the column
   GDF_REDUCTION_SUMOFSQUARES,   ///< Computes the sum of squares of the values in the column
+  GDF_REDUCTION_STDDEV,         ///< Computes the sample standard deviation of the values in the column
 } gdf_reduction_op;
 
 /**
