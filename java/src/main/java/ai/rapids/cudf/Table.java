@@ -26,7 +26,6 @@ import java.util.*;
  * collectively.
  * The refcount on the columns will be increased once they are passed in
  */
-@Deprecated
 public final class Table implements AutoCloseable {
   static {
     NativeDepsLoader.loadNativeDeps();
