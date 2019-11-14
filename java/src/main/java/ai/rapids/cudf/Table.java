@@ -26,6 +26,7 @@ import java.util.*;
  * collectively.
  * The refcount on the columns will be increased once they are passed in
  */
+@Deprecated
 public final class Table implements AutoCloseable {
   static {
     NativeDepsLoader.loadNativeDeps();
@@ -238,6 +239,8 @@ public final class Table implements AutoCloseable {
   private static native long[] concatenate(long[] cudfTablePointers) throws CudfException;
 
   private static native long[] gdfFilter(long input, long mask);
+
+  private static native long sortedOrder(long input, boolean[] isDescending, boolean[] areNullsSmallest);
 
   /////////////////////////////////////////////////////////////////////////////
   // TABLE CREATION APIs
@@ -898,6 +901,36 @@ public final class Table implements AutoCloseable {
   // TABLE MANIPULATION APIs
   /////////////////////////////////////////////////////////////////////////////
 
+  public ColumnVector sortedOrder(OrderByArg... args) {
+    assert args.length == columns.length || args.length == 0;
+    boolean[] isDescending = new boolean[args.length];
+    boolean[] isNullSmallest = new boolean[args.length];
+    for (int i = 0; i < args.length; i++) {
+      int index = args[i].index;
+      assert (index >= 0 && index < columns.length) :
+          "index is out of range 0 <= " + index + " < " + columns.length;
+      isDescending[i] = args[i].isDescending;
+      isNullSmallest[i] = args[i].isNullSmallest;
+    }
+
+    return new ColumnVector(sortedOrder(this.nativeHandle, isDescending, isNullSmallest));
+  }
+
+  public ColumnVector sortedOrder(boolean areNullSmallest, OrderByArg... args) {
+    assert args.length == columns.length || args.length == 0;
+    boolean[] isDescending = new boolean[args.length];
+    boolean[] isNullSmallest = new boolean[args.length];
+    for (int i = 0; i < args.length; i++) {
+      int index = args[i].index;
+      assert (index >= 0 && index < columns.length) :
+          "index is out of range 0 <= " + index + " < " + columns.length;
+      isDescending[i] = args[i].isDescending;
+      isNullSmallest[i] = areNullSmallest;
+    }
+
+    return new ColumnVector(sortedOrder(this.nativeHandle, isDescending, isNullSmallest));
+  }
+
   /**
    * Orders the table using the sortkeys returning a new allocated table. The caller is
    * responsible for cleaning up
@@ -926,11 +959,19 @@ public final class Table implements AutoCloseable {
   }
 
   public static OrderByArg asc(final int index) {
-    return new OrderByArg(index, false);
+    return new OrderByArg(index, false, false);
   }
 
   public static OrderByArg desc(final int index) {
-    return new OrderByArg(index, true);
+    return new OrderByArg(index, true, false);
+  }
+
+  public static OrderByArg asc(final int index, final boolean isNullSmallest) {
+    return new OrderByArg(index, false, isNullSmallest);
+  }
+
+  public static OrderByArg desc(final int index, final boolean isNullSmallest) {
+    return new OrderByArg(index, true, isNullSmallest);
   }
 
   public static Aggregate count(int index) {
@@ -1018,10 +1059,12 @@ public final class Table implements AutoCloseable {
   public static final class OrderByArg {
     final int index;
     final boolean isDescending;
+    final boolean isNullSmallest;
 
-    OrderByArg(int index, boolean isDescending) {
+    OrderByArg(int index, boolean isDescending, boolean isNullSmallest) {
       this.index = index;
       this.isDescending = isDescending;
+      this.isNullSmallest = isNullSmallest;
     }
   }
 

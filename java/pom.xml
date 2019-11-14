@@ -411,7 +411,7 @@
                     <javahClassNames>
                         <javahClassName>ai.rapids.cudf.Cuda</javahClassName>
                         <javahClassName>ai.rapids.cudf.Cudf</javahClassName>
-                        <javahClassName>ai.rapids.cudf.ColumnVector</javahClassName>
+                        <javahClassName>ai.rapids.cudf.CudfColumn</javahClassName>
                         <javahClassName>ai.rapids.cudf.Table</javahClassName>
                         <javahClassName>ai.rapids.cudf.Rmm</javahClassName>
                     </javahClassNames>

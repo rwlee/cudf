@@ -98,6 +98,17 @@ abstract class MemoryBuffer implements AutoCloseable {
   }
 
   /**
+   * Public constructor
+   * @param address location in memory
+   * @param length  size of this buffer
+   */
+  protected MemoryBuffer(long address, long length) {
+    this.address = address;
+    this.length = length;
+    this.cleaner = null;
+  }
+
+  /**
    * Internal constructor used when creating a slice.
    * @param address location in memory
    * @param length size of this buffer
@@ -141,7 +152,7 @@ abstract class MemoryBuffer implements AutoCloseable {
   /**
    * Close this buffer and free memory
    */
-  public final void close() {
+  public void close() {
     refCount--;
     cleaner.delRef();
     if (refCount == 0) {

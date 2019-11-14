@@ -32,6 +32,7 @@ import java.util.stream.IntStream;
  * close to decrement the reference count when you are done with the column, and call inRefCount
  * to increment the reference count.
  */
+@Deprecated
 public final class ColumnVector implements AutoCloseable, BinaryOperable {
   /**
    * The size in bytes of an offset entry
