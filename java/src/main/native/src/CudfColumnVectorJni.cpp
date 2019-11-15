@@ -16,9 +16,11 @@
 
 #include <cudf/column/column.hpp>
 #include <cudf/column/column_factories.hpp>
+#include <cudf/strings/strings_column_view.hpp>
 #include <cudf/transform.hpp>
 #include <cudf/types.hpp>
 
+#include "helper.cuh"
 #include "jni_utils.hpp"
 
 extern "C" {
@@ -36,6 +38,34 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_CudfColumn_makeNumericCudfColumn(
     cudf::mask_state n_mask_state = static_cast<cudf::mask_state>(j_mask_state);
     std::unique_ptr<cudf::column> column(
         cudf::make_numeric_column(*n_data_type.get(), n_size, n_mask_state));
+    return reinterpret_cast<jlong>(column.release());
+  }
+  CATCH_STD(env, 0);
+}
+
+JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_CudfColumn_makeStringCudfColumn(
+    JNIEnv *env, jobject j_object, jlong j_char_data, jlong j_offset_data, jlong j_valid_data,
+    jint j_null_count, jint size) {
+
+  JNI_NULL_CHECK(env, j_char_data, "char data is null", 0);
+  JNI_NULL_CHECK(env, j_offset_data, "offset is null", 0);
+
+  try {
+    uint32_t *host_offsets = reinterpret_cast<uint32_t *>(j_offset_data);
+    char *n_char_data = reinterpret_cast<char *>(j_char_data);
+    uint32_t n_data_size = host_offsets[size];
+    std::vector<char> strings(n_char_data, n_char_data + n_data_size);
+    std::vector<cudf::size_type> offsets(host_offsets, host_offsets + size + 1);
+
+    for (int i = 0 ; i < n_data_size ; i++) {
+        std::cout << "char: " << strings[i] << std::endl;
+    }
+    for (int i = 0 ; i < size + 1; i++) {
+        std::cout << "off: " << offsets[i] << std::endl;
+    }
+
+    std::unique_ptr<cudf::column> column = make_string(strings, offsets);
+    cudf::strings::print(cudf::strings_column_view(*column.get()));
     return reinterpret_cast<jlong>(column.release());
   }
   CATCH_STD(env, 0);
@@ -119,6 +149,25 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_CudfColumn_transform(JNIEnv *env, jo
     std::unique_ptr<cudf::column> result = cudf::experimental::transform(
         column->view(), n_udf, cudf::data_type(cudf::INT32), j_is_ptx);
     return reinterpret_cast<jlong>(result.release());
+  }
+  CATCH_STD(env, 0);
+}
+
+JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_CudfColumn_getStringDataAndOffsets(JNIEnv *env,
+                                                                               jobject j_object,
+                                                                               jlong handle) {
+  try {
+    cudf::column *column = reinterpret_cast<cudf::column *>(handle);
+    cudf::strings_column_view strings_column(column->view());
+    cudf::column_view characters = strings_column.chars();
+    cudf::column_view offsets = strings_column.offsets();
+
+    cudf::jni::native_jlongArray ret(env, 4);
+    ret[0] = reinterpret_cast<jlong>(static_cast<const void *>(characters.data<char>()));
+    ret[1] = characters.size();
+    ret[2] = reinterpret_cast<jlong>(static_cast<const void *>(offsets.data<int32_t>()));
+    ret[3] = sizeof(int) * offsets.size();
+    return ret.get_jArray();
   }
   CATCH_STD(env, 0);
 }

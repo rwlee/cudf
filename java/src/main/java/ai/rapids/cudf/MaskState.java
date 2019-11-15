@@ -23,7 +23,7 @@ enum MaskState {
   ALL_VALID(2),
   ALL_NULL(3);
 
-  private static final MaskState[] TYPE_IDS = MaskState.values();
+  private static final MaskState[] MASK_STATES = MaskState.values();
   final int nativeId;
 
   MaskState(int nativeId) {
@@ -31,11 +31,11 @@ enum MaskState {
   }
 
   static MaskState fromNative(int nativeId) {
-    for (MaskState type : TYPE_IDS) {
+    for (MaskState type : MASK_STATES) {
       if (type.nativeId == nativeId) {
         return type;
       }
     }
-    throw new IllegalArgumentException("Could not translate " + nativeId + " into a TypeId");
+    throw new IllegalArgumentException("Could not translate " + nativeId + " into a MaskState");
   }
 }

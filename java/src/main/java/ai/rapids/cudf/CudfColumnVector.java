@@ -56,22 +56,24 @@ public final class CudfColumnVector implements AutoCloseable {
     MemoryCleaner.register(this, offHeap);
     offHeap.cudfColumnHandle = new CudfColumn(nativePointer);
     this.type = getTypeId(nativePointer);
-    assert type != TypeId.STRING : STRING_NOT_SUPPORTED;
     offHeap.setHostData(null);
     this.rows = offHeap.cudfColumnHandle.getNativeRowCount();
     this.nullCount = offHeap.cudfColumnHandle.getNativeNullCount();
     DeviceMemoryBufferView data = null;
+    DeviceMemoryBufferView offsets = null;
     if (type != TypeId.STRING) {
       data = new DeviceMemoryBufferView(offHeap.cudfColumnHandle.getNativeDataPointer(), this.rows * type.sizeInBytes);
     } else {
-      throw new UnsupportedOperationException(STRING_NOT_SUPPORTED);
+      long[] dataAndOffsets = CudfColumn.getStringDataAndOffsets(getNativeCudfColumnAddress());
+      data = new DeviceMemoryBufferView(dataAndOffsets[0], dataAndOffsets[1]);
+      offsets = new DeviceMemoryBufferView(dataAndOffsets[2], dataAndOffsets[3]);
     }
     DeviceMemoryBufferView valid = null;
     long validPointer = offHeap.cudfColumnHandle.getNativeValidPointer();
     if (validPointer != 0) {
       valid = new DeviceMemoryBufferView(validPointer, CudfColumn.getNativeValidPointerSize((int) rows));
     }
-    this.offHeap.setDeviceData(new BufferEncapsulator<>(data, valid, null));
+    this.offHeap.setDeviceData(new BufferEncapsulator<>(data, valid, offsets));
     this.refCount = 0;
     incRefCountInternal(true);
   }
@@ -103,7 +105,6 @@ public final class CudfColumnVector implements AutoCloseable {
     if (nullCount > 0 && hostValidityBuffer == null) {
       throw new IllegalStateException("Buffer cannot have a nullCount without a validity buffer");
     }
-    assert type != TypeId.STRING : STRING_NOT_SUPPORTED;
     MemoryCleaner.register(this, offHeap);
     offHeap.setHostData(new BufferEncapsulator(hostDataBuffer, hostValidityBuffer, offsetBuffer));
     offHeap.setDeviceData(null);
@@ -221,6 +222,17 @@ public final class CudfColumnVector implements AutoCloseable {
   }
 
   /**
+   * Drop any data stored on the host, but move it to the device first if necessary.
+   */
+  public final void dropHostData() {
+    ensureOnDevice();
+    if (offHeap.hostData != null) {
+      offHeap.hostData.close();
+      offHeap.hostData = null;
+    }
+  }
+
+  /**
    * Be sure the data is on the host.
    */
   public final void ensureOnHost() {
@@ -235,6 +247,9 @@ public final class CudfColumnVector implements AutoCloseable {
         try {
           if (offHeap.getDeviceData().valid != null) {
             hostValidityBuffer = HostMemoryBuffer.allocate(offHeap.getDeviceData().valid.getLength());
+          }
+          if (type == TypeId.STRING) {
+            hostOffsetsBuffer = HostMemoryBuffer.allocate(offHeap.deviceData.offsets.length);
           }
           hostDataBuffer = HostMemoryBuffer.allocate(offHeap.getDeviceData().data.getLength());
 
@@ -254,6 +269,9 @@ public final class CudfColumnVector implements AutoCloseable {
         if (offHeap.getHostData().valid != null) {
           offHeap.getHostData().valid.copyFromDeviceBuffer(offHeap.getDeviceData().valid);
         }
+        if (type == TypeId.STRING) {
+          offHeap.hostData.offsets.copyFromDeviceBuffer(offHeap.deviceData.offsets);
+        }
       }
     }
   }
@@ -265,20 +283,28 @@ public final class CudfColumnVector implements AutoCloseable {
     if (offHeap.getDeviceData() == null && rows != 0) {
       checkHasHostData();
 
-      assert type != TypeId.STRING : STRING_NOT_SUPPORTED;
-      
+      assert type != TypeId.STRING || offHeap.getHostData().offsets != null;
+
       try (NvtxRange toDev = new NvtxRange("ensureOnDevice", NvtxColor.BLUE)) {
         DeviceMemoryBufferView deviceDataBuffer = null;
         DeviceMemoryBufferView deviceValidityBuffer = null;
+        DeviceMemoryBufferView deviceOffsetsBuffer = null;
 
         boolean needsCleanup = true;
         try {
-          offHeap.cudfColumnHandle =  new CudfColumn(type, (int) rows, hasNulls() ? MaskState.UNINITIALIZED : MaskState.UNALLOCATED);
+          if (type != TypeId.STRING) {
+            offHeap.cudfColumnHandle = new CudfColumn(type, (int) rows, hasNulls() ? MaskState.UNINITIALIZED : MaskState.UNALLOCATED);
+            deviceDataBuffer = new DeviceMemoryBufferView(offHeap.cudfColumnHandle.getNativeDataPointer(), rows * type.sizeInBytes);
+          } else {
+            offHeap.cudfColumnHandle = new CudfColumn(offHeap.hostData.data.address, offHeap.hostData.offsets.address, offHeap.hostData.valid == null ? 0 : offHeap.hostData.valid.address, (int) nullCount, (int) rows);
+            long[] dataAndOffsets = CudfColumn.getStringDataAndOffsets(getNativeCudfColumnAddress());
+            deviceDataBuffer = new DeviceMemoryBufferView(dataAndOffsets[0], dataAndOffsets[1]);
+            deviceOffsetsBuffer = new DeviceMemoryBufferView(dataAndOffsets[2], dataAndOffsets[3]);
+          }
           if (hasNulls()) {
             deviceValidityBuffer = new DeviceMemoryBufferView(offHeap.cudfColumnHandle.getNativeValidPointer(), offHeap.cudfColumnHandle.getNativeValidPointerSize((int) rows));
           }
-          deviceDataBuffer = new DeviceMemoryBufferView(offHeap.cudfColumnHandle.getNativeDataPointer(), rows * type.sizeInBytes);
-          offHeap.setDeviceData(new BufferEncapsulator(deviceDataBuffer, deviceValidityBuffer, null));
+          offHeap.setDeviceData(new BufferEncapsulator(deviceDataBuffer, deviceValidityBuffer, deviceOffsetsBuffer));
           needsCleanup = false;
         } finally {
           if (needsCleanup) {
@@ -290,14 +316,47 @@ public final class CudfColumnVector implements AutoCloseable {
             }
           }
         }
+        if (type != TypeId.STRING) {
+          if (offHeap.getDeviceData().valid != null) {
+            offHeap.getDeviceData().valid.copyFromHostBuffer(offHeap.getHostData().valid);
+          }
 
-        if (offHeap.getDeviceData().valid != null) {
-          offHeap.getDeviceData().valid.copyFromHostBuffer(offHeap.getHostData().valid);
+          offHeap.getDeviceData().data.copyFromHostBuffer(offHeap.getHostData().data);
         }
-
-        offHeap.getDeviceData().data.copyFromHostBuffer(offHeap.getHostData().data);
       }
     }
+  }
+
+  private static CudfColumnVector fromStrings(TypeId type, String... values) {
+    assert type == TypeId.STRING;
+    int rows = values.length;
+    long nullCount = 0;
+    // How many bytes do we need to hold the data.  Sorry this is really expensive
+    long bufferSize = 0;
+    for (String s: values) {
+      if (s == null) {
+        nullCount++;
+      } else {
+        bufferSize += s.getBytes(StandardCharsets.UTF_8).length;
+      }
+    }
+    if (nullCount > 0) {
+      return build(type, rows, bufferSize, (b) -> b.appendBoxed(values));
+    }
+    return build(type, rows, bufferSize, (b) -> {
+      for (String s: values) {
+        b.append(s);
+      }
+    });
+  }
+
+  /**
+   * Create a new string vector from the given values.  This API
+   * supports inline nulls. This is really intended to be used only for testing as
+   * it is slow and memory intensive to translate between java strings and UTF8 strings.
+   */
+  public static CudfColumnVector fromStrings(String... values) {
+    return fromStrings(TypeId.STRING, values);
   }
 
   /**
@@ -329,6 +388,20 @@ public final class CudfColumnVector implements AutoCloseable {
   }
 
   /**
+   * Create a new Builder to hold the specified number of rows and with enough space to hold the
+   * given amount of string data. Be sure to close the builder when done with it. Please try to
+   * use {@see #build(int, int, Consumer)} instead to avoid needing to close the builder.
+   * @param type the type of vector to build.
+   * @param rows the number of rows this builder can hold
+   * @param stringBufferSize the size of the string buffer to allocate.
+   * @return the builder to use.
+   */
+  public static CudfColumnVector.Builder builder(TypeId type, int rows, long stringBufferSize) {
+    assert type == TypeId.STRING;
+    return new CudfColumnVector.Builder(type, rows, stringBufferSize);
+  }
+
+  /**
    * Create a new vector.
    * @param type       the type of vector to build.
    * @param rows       maximum number of rows that the vector can hold.
@@ -338,6 +411,13 @@ public final class CudfColumnVector implements AutoCloseable {
   public static CudfColumnVector build(TypeId type, int rows,
                                    Consumer<CudfColumnVector.Builder> init) {
     try (CudfColumnVector.Builder builder = builder(type, rows)) {
+      init.accept(builder);
+      return builder.build();
+    }
+  }
+
+  public static CudfColumnVector build(TypeId type, int rows, long stringBufferSize, Consumer<CudfColumnVector.Builder> init) {
+    try (CudfColumnVector.Builder builder = builder(type, rows, stringBufferSize)) {
       init.accept(builder);
       return builder.build();
     }
@@ -372,6 +452,22 @@ public final class CudfColumnVector implements AutoCloseable {
     assert type == TypeId.INT32 || type == TypeId.TIMESTAMP_DAYS;
     assertsForGet(index);
     return offHeap.getHostData().data.getInt(index * type.sizeInBytes);
+  }
+
+  /**
+   * Get the value at index.  This API is slow as it has to translate the
+   * string representation.  Please use it with caution.
+   */
+  public String getJavaString(long index) {
+    assert type == TypeId.STRING;
+    assertsForGet(index);
+    int start = offHeap.getHostData().offsets.getInt(index * OFFSET_SIZE);
+    int size = offHeap.getHostData().offsets.getInt((index + 1) * OFFSET_SIZE) - start;
+    byte[] rawData = new byte[size];
+    if (size > 0) {
+      offHeap.getHostData().data.getBytes(rawData, 0, start, size);
+    }
+    return new String(rawData, StandardCharsets.UTF_8);
   }
 
   public CudfColumnVector transform(String udf, boolean isPtx) {
@@ -569,7 +665,6 @@ public final class CudfColumnVector implements AutoCloseable {
      *                         working with Strings.  It is ignored otherwise.
      */
     Builder(TypeId type, long rows, long stringBufferSize) {
-      assert type != TypeId.STRING : STRING_NOT_SUPPORTED;
       this.type = type;
       this.rows = rows;
       if (type == TypeId.STRING) {
@@ -599,7 +694,6 @@ public final class CudfColumnVector implements AutoCloseable {
      */
     Builder(TypeId type, long rows, HostMemoryBuffer testData,
             HostMemoryBuffer testValid, HostMemoryBuffer testOffsets) {
-      assert type != TypeId.STRING : STRING_NOT_SUPPORTED;
       this.type = type;
       this.rows = rows;
       this.data = testData;

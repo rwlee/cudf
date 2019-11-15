@@ -28,10 +28,11 @@ public class TableViewTest extends CudfTestBase {
   void testSortedOrderColNullOrder() {
     try (TableView t0 = new TableView.TestBuilder()
         .column(5, 4, 3, null, 8, 5)
+        .column("d", "e", "a", null, "k", "d")
         .column(9, 40, 70, null, 2, 10)
         .build();
-         CudfColumnVector columnVector = t0.sortedOrder(TableView.asc(0, true), TableView.desc(1));
-         CudfColumnVector expected = CudfColumnVector.fromInts(3, 2, 1, 5, 0, 4)) {
+         CudfColumnVector columnVector = t0.sortedOrder(TableView.asc(0, true), TableView.asc(1),TableView.desc(2));
+         ColumnVector expected = ColumnVector.fromInts(3, 2, 1, 5, 0, 4)) {
         columnVector.ensureOnHost();
       for (int i = 0 ; i < expected.getRowCount() ; i++) {
         assertEquals(expected.isNull(i), columnVector.isNull(i));

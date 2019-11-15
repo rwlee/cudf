@@ -26,7 +26,11 @@ public class CudfColumn {
   }
 
   public CudfColumn(TypeId typeId, int rows, MaskState maskState) {
-    this.nativeHandle = makeNumericCudfColumn(typeId.nativeId, rows, maskState.nativeId);
+      this.nativeHandle = makeNumericCudfColumn(typeId.nativeId, rows, maskState.nativeId);
+  }
+
+  public CudfColumn(long charData, long offsetData, long validData, int nullCount, int rows) {
+    this.nativeHandle = makeStringCudfColumn(charData, offsetData, validData, nullCount, rows);
   }
 
   public long getNativeValidPointer() {
@@ -73,5 +77,9 @@ public class CudfColumn {
   static native long getNativeValidPointerSize(int size);
 
   private native static long transform(long handle, String udf, boolean isPtx);
+
+  private static native long makeStringCudfColumn(long charData, long offsetData, long validData, int nullCount, int size);
+
+  public static native long[] getStringDataAndOffsets(long nativeHandle);
 
 }

@@ -57,4 +57,15 @@ public class CudfColumnVectorTest extends CudfTestBase {
       }
     }
   }
+
+  @Test
+  void testString() {
+    try (CudfColumnVector cv = CudfColumnVector.fromStrings("d", "sd", "sd")) {
+      cv.dropHostData();
+      cv.ensureOnHost();
+      for (int i = 0 ; i < cv.getRowCount() ; i++) {
+        System.out.println(cv.getJavaString(i));
+      }
+    }
+  }
 }

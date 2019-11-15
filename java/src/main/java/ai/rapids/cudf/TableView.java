@@ -235,9 +235,8 @@ public class TableView implements AutoCloseable {
       CudfColumnVector ret = null;
       switch (type) {
         case STRING:
-          throw new UnsupportedOperationException("op not supported");
-//          ret = CudfColumnVector.fromStrings((String[]) dataArray);
-//          break;
+          ret = CudfColumnVector.fromStrings((String[]) dataArray);
+          break;
         case BOOL8:
           throw new UnsupportedOperationException("op not supported");
 //          ret = CudfColumnVector.fromBoxedBooleans((Boolean[]) dataArray);
