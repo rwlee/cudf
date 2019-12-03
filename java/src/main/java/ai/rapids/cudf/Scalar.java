@@ -30,15 +30,17 @@ public final class Scalar implements BinaryOperable {
   /**
    * Generic NULL value.
    */
-  public static final Scalar NULL = new Scalar(DType.INT8, TimeUnit.NONE);
+  public static final Scalar NULL = new Scalar(TypeId.INT8, TimeUnit.NONE);
 
-  private static final EnumSet<DType> INTEGRAL_TYPES = EnumSet.of(
-      DType.BOOL8, DType.INT8, DType.INT16, DType.INT32, DType.INT64,
-      DType.DATE32, DType.DATE64, DType.TIMESTAMP);
+/*
+  private static final EnumSet<TypeId> INTEGRAL_TYPES = EnumSet.of(
+      TypeId.BOOL8, TypeId.INT8, TypeId.INT16, TypeId.INT32, TypeId.INT64,
+      TypeId.TIMESTAMP_DAYS, TypeId.DATE64, TypeId.TIMESTAMP);
+*/
 
   /*
    * In the native code all of the value are stored in a union with separate entries for each
-   * DType.  Java has no equivalent to a union, so as a space saving compromise we store all
+   * TypeId.  Java has no equivalent to a union, so as a space saving compromise we store all
    * possible integer types (INT8 - INT64, DATE, TIMESTAMP, etc) in intTypeStorage.
    * Because conversion between a float and a double is not as cheap as it is for integers, we
    * split out float and double into floatTypeStorage and doubleTypeStorage.
@@ -48,13 +50,13 @@ public final class Scalar implements BinaryOperable {
   final float floatTypeStorage;
   final double doubleTypeStorage;
   final byte[] stringTypeStorage;
-  final DType type;
+  final TypeId type;
   final boolean isValid;
   // TimeUnit is not currently used by scalar values.  There are no operations that need it
   // When this changes we can support it.
   final TimeUnit timeUnit;
 
-  private Scalar(long value, DType type, TimeUnit unit) {
+  private Scalar(long value, TypeId type, TimeUnit unit) {
     intTypeStorage = value;
     floatTypeStorage = 0;
     doubleTypeStorage = 0;
@@ -64,7 +66,7 @@ public final class Scalar implements BinaryOperable {
     timeUnit = unit;
   }
 
-  private Scalar(float value, DType type, TimeUnit unit) {
+  private Scalar(float value, TypeId type, TimeUnit unit) {
     intTypeStorage = 0;
     floatTypeStorage = value;
     doubleTypeStorage = 0;
@@ -74,7 +76,7 @@ public final class Scalar implements BinaryOperable {
     timeUnit = unit;
   }
 
-  private Scalar(double value, DType type, TimeUnit unit) {
+  private Scalar(double value, TypeId type, TimeUnit unit) {
     intTypeStorage = 0;
     floatTypeStorage = 0;
     doubleTypeStorage = value;
@@ -84,7 +86,7 @@ public final class Scalar implements BinaryOperable {
     timeUnit = unit;
   }
 
-  private Scalar(byte[] value, DType type, TimeUnit unit) {
+  private Scalar(byte[] value, TypeId type, TimeUnit unit) {
     intTypeStorage = 0;
     floatTypeStorage = 0;
     doubleTypeStorage = 0;
@@ -94,7 +96,7 @@ public final class Scalar implements BinaryOperable {
     timeUnit = unit;
   }
 
-  private Scalar(DType type, TimeUnit unit) {
+  private Scalar(TypeId type, TimeUnit unit) {
     intTypeStorage = 0;
     floatTypeStorage = 0;
     doubleTypeStorage = 0;
@@ -106,7 +108,7 @@ public final class Scalar implements BinaryOperable {
 
   // These are invoked by native code to construct scalars.
   static Scalar fromNull(int dtype) {
-    return new Scalar(DType.fromNative(dtype), TimeUnit.NONE);
+    return new Scalar(TypeId.fromNative(dtype), TimeUnit.NONE);
   }
 
   static Scalar timestampFromNull(int nativeTimeUnit) {
@@ -120,63 +122,70 @@ public final class Scalar implements BinaryOperable {
   // These Scalar factory methods are called from native code.
   // If a new scalar type is supported then CudfJni also needs to be updated.
 
-  public static Scalar fromNull(DType dtype) {
+  public static Scalar fromNull(TypeId dtype) {
     return new Scalar(dtype, TimeUnit.NONE);
   }
 
   public static Scalar timestampFromNull(TimeUnit timeUnit) {
-    return new Scalar(DType.TIMESTAMP, timeUnit);
+    throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
+//    return new Scalar(TypeId.TIMESTAMP, timeUnit);
   }
 
   public static Scalar fromBool(boolean value) {
-    return new Scalar(value ? 1 : 0, DType.BOOL8, TimeUnit.NONE);
+    return new Scalar(value ? 1 : 0, TypeId.BOOL8, TimeUnit.NONE);
   }
 
   public static Scalar fromByte(byte value) {
-    return new Scalar(value, DType.INT8, TimeUnit.NONE);
+    return new Scalar(value, TypeId.INT8, TimeUnit.NONE);
   }
 
   public static Scalar fromShort(short value) {
-    return new Scalar(value, DType.INT16, TimeUnit.NONE);
+    return new Scalar(value, TypeId.INT16, TimeUnit.NONE);
   }
 
   public static Scalar fromInt(int value) {
-    return new Scalar(value, DType.INT32, TimeUnit.NONE);
+    return new Scalar(value, TypeId.INT32, TimeUnit.NONE);
   }
 
   public static Scalar dateFromInt(int value) {
-    return new Scalar(value, DType.DATE32, TimeUnit.NONE);
+    throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
+//    return new Scalar(value, TypeId.DATE32, TimeUnit.NONE);
   }
 
   public static Scalar fromLong(long value) {
-    return new Scalar(value, DType.INT64, TimeUnit.NONE);
+    return new Scalar(value, TypeId.INT64, TimeUnit.NONE);
   }
 
   public static Scalar dateFromLong(long value) {
-    return new Scalar(value, DType.DATE64, TimeUnit.NONE);
+    throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
+//    return new Scalar(value, TypeId.DATE64, TimeUnit.NONE);
   }
 
   public static Scalar timestampFromLong(long value) {
-    return new Scalar(value, DType.TIMESTAMP, TimeUnit.MILLISECONDS);
+    throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
+//    return new Scalar(value, TypeId.TIMESTAMP, TimeUnit.MILLISECONDS);
   }
 
   public static Scalar timestampFromLong(long value, TimeUnit unit) {
+    throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
+/*
     if (unit == TimeUnit.NONE) {
       unit = TimeUnit.MILLISECONDS;
     }
-    return new Scalar(value, DType.TIMESTAMP, unit);
+    return new Scalar(value, TypeId.TIMESTAMP, unit);
+*/
   }
 
   public static Scalar fromFloat(float value) {
-    return new Scalar(value, DType.FLOAT32, TimeUnit.NONE);
+    return new Scalar(value, TypeId.FLOAT32, TimeUnit.NONE);
   }
 
   public static Scalar fromDouble(double value) {
-    return new Scalar(value, DType.FLOAT64, TimeUnit.NONE);
+    return new Scalar(value, TypeId.FLOAT64, TimeUnit.NONE);
   }
 
   public static Scalar fromString(String value) {
-    return new Scalar(value.getBytes(StandardCharsets.UTF_8), DType.STRING, TimeUnit.NONE);
+    return new Scalar(value.getBytes(StandardCharsets.UTF_8), TypeId.STRING, TimeUnit.NONE);
   }
 
   public boolean isValid() {
@@ -184,7 +193,7 @@ public final class Scalar implements BinaryOperable {
   }
 
   @Override
-  public DType getType() {
+  public TypeId getType() {
     return type;
   }
 
@@ -192,112 +201,133 @@ public final class Scalar implements BinaryOperable {
    * Returns the scalar value as a boolean.
    */
   public boolean getBoolean() {
+    throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
+/*
     if (INTEGRAL_TYPES.contains(type)) {
       return intTypeStorage != 0;
-    } else if (type == DType.FLOAT32) {
+    } else if (type == TypeId.FLOAT32) {
       return floatTypeStorage != 0f;
-    } else if (type == DType.FLOAT64) {
+    } else if (type == TypeId.FLOAT64) {
       return doubleTypeStorage != 0.;
-    } else if (type == DType.STRING) {
+    } else if (type == TypeId.STRING) {
       return Boolean.parseBoolean(getJavaString());
     }
     throw new IllegalStateException("Unexpected scalar type: " + type);
+*/
   }
 
   /**
    * Returns the scalar value as a byte.
    */
   public byte getByte() {
+    throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
+/*
     if (INTEGRAL_TYPES.contains(type)) {
       return (byte) intTypeStorage;
-    } else if (type == DType.FLOAT32) {
+    } else if (type == TypeId.FLOAT32) {
       return (byte) floatTypeStorage;
-    } else if (type == DType.FLOAT64) {
+    } else if (type == TypeId.FLOAT64) {
       return (byte) doubleTypeStorage;
-    } else if (type == DType.STRING) {
+    } else if (type == TypeId.STRING) {
       return Byte.parseByte(getJavaString());
     }
     throw new IllegalStateException("Unexpected scalar type: " + type);
+*/
   }
 
   /**
    * Returns the scalar value as a short.
    */
   public short getShort() {
+    throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
+/*
     if (INTEGRAL_TYPES.contains(type)) {
       return (short) intTypeStorage;
-    } else if (type == DType.FLOAT32) {
+    } else if (type == TypeId.FLOAT32) {
       return (short) floatTypeStorage;
-    } else if (type == DType.FLOAT64) {
+    } else if (type == TypeId.FLOAT64) {
       return (short) doubleTypeStorage;
-    } else if (type == DType.STRING) {
+    } else if (type == TypeId.STRING) {
       return Short.parseShort(getJavaString());
     }
     throw new IllegalStateException("Unexpected scalar type: " + type);
+*/
   }
 
   /**
    * Returns the scalar value as an int.
    */
   public int getInt() {
+    throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
+/*
     if (INTEGRAL_TYPES.contains(type)) {
       return (int) intTypeStorage;
-    } else if (type == DType.FLOAT32) {
+    } else if (type == TypeId.FLOAT32) {
       return (int) floatTypeStorage;
-    } else if (type == DType.FLOAT64) {
+    } else if (type == TypeId.FLOAT64) {
       return (int) doubleTypeStorage;
-    } else if (type == DType.STRING) {
+    } else if (type == TypeId.STRING) {
       return Integer.parseInt(getJavaString());
     }
     throw new IllegalStateException("Unexpected scalar type: " + type);
+*/
   }
 
   /**
    * Returns the scalar value as a long.
    */
   public long getLong() {
+    throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
+/*
     if (INTEGRAL_TYPES.contains(type)) {
       return intTypeStorage;
-    } else if (type == DType.FLOAT32) {
+    } else if (type == TypeId.FLOAT32) {
       return (long) floatTypeStorage;
-    } else if (type == DType.FLOAT64) {
+    } else if (type == TypeId.FLOAT64) {
       return (long) doubleTypeStorage;
-    } else if (type == DType.STRING) {
+    } else if (type == TypeId.STRING) {
       return Long.parseLong(getJavaString());
     }
     throw new IllegalStateException("Unexpected scalar type: " + type);
+*/
   }
 
   /**
    * Returns the scalar value as a float.
    */
   public float getFloat() {
-    if (type == DType.FLOAT32) {
+    throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
+/*
+    if (type == TypeId.FLOAT32) {
       return floatTypeStorage;
-    } else if (type == DType.FLOAT64) {
+    } else if (type == TypeId.FLOAT64) {
       return (float) doubleTypeStorage;
     } else if (INTEGRAL_TYPES.contains(type)) {
       return intTypeStorage;
-    } else if (type == DType.STRING) {
+    } else if (type == TypeId.STRING) {
       return Float.parseFloat(getJavaString());
     }
     throw new IllegalStateException("Unexpected scalar type: " + type);
+*/
   }
 
   /**
    * Returns the scalar value as a double.
    */
   public double getDouble() {
-    if (type == DType.FLOAT64) {
+    throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
+/*
+    if (type == TypeId.FLOAT64) {
       return doubleTypeStorage;
-    } else if (type == DType.FLOAT32) {
+    } else if (type == TypeId.FLOAT32) {
       return floatTypeStorage;
     } else if (INTEGRAL_TYPES.contains(type)) {
       return intTypeStorage;
-    } else if (type == DType.STRING) {
+    } else if (type == TypeId.STRING) {
       return Double.parseDouble(getJavaString());
     }
     throw new IllegalStateException("Unexpected scalar type: " + type);
+*/
   }
 
   /**
@@ -311,30 +341,35 @@ public final class Scalar implements BinaryOperable {
    * Returns the scalar value as a Java string.
    */
   public String getJavaString() {
-    if (type == DType.STRING) {
+    throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
+/*
+    if (type == TypeId.STRING) {
       return new String(stringTypeStorage, StandardCharsets.UTF_8);
     } else if (INTEGRAL_TYPES.contains(type)) {
       return Long.toString(intTypeStorage);
-    } else if (type == DType.FLOAT32) {
+    } else if (type == TypeId.FLOAT32) {
       return Float.toString(floatTypeStorage);
-    } else if (type == DType.FLOAT64) {
+    } else if (type == TypeId.FLOAT64) {
       return Double.toString(doubleTypeStorage);
     }
     throw new IllegalStateException("Unexpected scalar type: " + type);
+*/
   }
 
   /**
    * Returns the scalar value as UTF-8 data.
    */
   public byte[] getUTF8() {
-    if (type == DType.STRING) {
+    if (type == TypeId.STRING) {
       return stringTypeStorage;
     }
     return getJavaString().getBytes(StandardCharsets.UTF_8);
   }
 
   @Override
-  public ColumnVector binaryOp(BinaryOp op, BinaryOperable rhs, DType outType) {
+  public ColumnVector binaryOp(BinaryOp op, BinaryOperable rhs, TypeId outType) {
+    throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
+/*
     if (rhs instanceof ColumnVector) {
       ColumnVector cvRhs = (ColumnVector) rhs;
       try (DevicePrediction prediction = new DevicePrediction(cvRhs.predictSizeFor(outType), "binaryOp")) {
@@ -344,6 +379,7 @@ public final class Scalar implements BinaryOperable {
       throw new IllegalArgumentException(rhs.getClass() + " is not supported as a binary op with " +
           "Scalar");
     }
+*/
   }
 
   @Override
@@ -368,6 +404,8 @@ public final class Scalar implements BinaryOperable {
 
   @Override
   public String toString() {
+    throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
+/*
     StringBuilder sb = new StringBuilder("Scalar{type=");
     sb.append(type);
     sb.append(" value=");
@@ -412,5 +450,6 @@ public final class Scalar implements BinaryOperable {
 
     sb.append("}");
     return sb.toString();
+*/
   }
 }

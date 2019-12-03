@@ -210,7 +210,7 @@ public class ColumnVectorTest extends CudfTestBase {
 
   @Test
   void testFromNullScalarInteger() {
-    try (ColumnVector input = ColumnVector.fromScalar(Scalar.fromNull(DType.INT32), 6);
+    try (ColumnVector input = ColumnVector.fromScalar(Scalar.fromNull(TypeId.INT32), 6);
          ColumnVector expected = ColumnVector.fromBoxedInts(null, null, null, null, null, null)) {
       assertEquals(input.getNullCount(), expected.getNullCount());
       assertColumnsAreEqual(input, expected);
@@ -221,7 +221,7 @@ public class ColumnVectorTest extends CudfTestBase {
   void testSetToNullScalarInteger() {
     try (ColumnVector input = ColumnVector.fromScalar(Scalar.fromInt(123), 6);
          ColumnVector expected = ColumnVector.fromBoxedInts(null, null, null, null, null, null)) {
-      input.fill(Scalar.fromNull(DType.INT32));
+      input.fill(Scalar.fromNull(TypeId.INT32));
       assertEquals(input.getNullCount(), expected.getNullCount());
       assertColumnsAreEqual(input, expected);
     }
@@ -230,7 +230,7 @@ public class ColumnVectorTest extends CudfTestBase {
   @Test
   void testSetToNullScalarByte() {
     int numNulls = 3000;
-    try (ColumnVector input = ColumnVector.fromScalar(Scalar.fromNull(DType.INT8), numNulls)) {
+    try (ColumnVector input = ColumnVector.fromScalar(Scalar.fromNull(TypeId.INT8), numNulls)) {
       assertEquals(input.getNullCount(), numNulls);
       input.ensureOnHost();
       for (int i = 0; i < numNulls; i++){
@@ -242,7 +242,7 @@ public class ColumnVectorTest extends CudfTestBase {
   @Test
   void testSetToNullThenBackScalarByte() {
     int numNulls = 3000;
-    try (ColumnVector input = ColumnVector.fromScalar(Scalar.fromNull(DType.INT8), numNulls)) {
+    try (ColumnVector input = ColumnVector.fromScalar(Scalar.fromNull(TypeId.INT8), numNulls)) {
       assertEquals(input.getNullCount(), numNulls);
       input.fill(Scalar.fromByte((byte)5));
       assertEquals(input.getNullCount(), 0);
@@ -499,7 +499,10 @@ public class ColumnVectorTest extends CudfTestBase {
 
   @Test
   void testAppendStrings() {
-    try (ColumnVector cv = ColumnVector.build(DType.STRING, 10, 0, (b) -> {
+    //failing the test;
+    assertTrue(false);
+/*
+    try (ColumnVector cv = ColumnVector.build(TypeId.STRING, 10, 0, (b) -> {
       b.append("123456789");
       b.append("1011121314151617181920");
       b.append("");
@@ -511,6 +514,7 @@ public class ColumnVectorTest extends CudfTestBase {
       assertEquals("", cv.getJavaString(2));
       assertTrue(cv.isNull(3));
     }
+*/
   }
 
   @Test

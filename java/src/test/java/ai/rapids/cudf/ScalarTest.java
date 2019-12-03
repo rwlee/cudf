@@ -20,16 +20,14 @@ package ai.rapids.cudf;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ScalarTest {
 
   @Test
   public void testNull() {
     assert !Scalar.NULL.isValid();
-    for (DType type: DType.values()) {
+    for (TypeId type: TypeId.values()) {
       Scalar n = Scalar.fromNull(type);
       assert !n.isValid();
       assertEquals(type, n.getType());
@@ -39,7 +37,7 @@ public class ScalarTest {
   @Test
   public void testBool() {
     Scalar s = Scalar.fromBool(false);
-    assertEquals(DType.BOOL8, s.getType());
+    assertEquals(TypeId.BOOL8, s.getType());
     assert s.isValid();
 
     //values are automatically cast to the desired type
@@ -57,7 +55,7 @@ public class ScalarTest {
   @Test
   public void testByte() {
     Scalar s = Scalar.fromByte((byte) 1);
-    assertEquals(DType.INT8, s.getType());
+    assertEquals(TypeId.INT8, s.getType());
     assert s.isValid();
 
     //values are automatically cast to the desired type
@@ -75,7 +73,7 @@ public class ScalarTest {
   @Test
   public void testShort() {
     Scalar s = Scalar.fromShort((short) 2);
-    assertEquals(DType.INT16, s.getType());
+    assertEquals(TypeId.INT16, s.getType());
     assert s.isValid();
 
     //values are automatically cast to the desired type
@@ -93,7 +91,7 @@ public class ScalarTest {
   @Test
   public void testInt() {
     Scalar s = Scalar.fromInt(3);
-    assertEquals(DType.INT32, s.getType());
+    assertEquals(TypeId.INT32, s.getType());
     assert s.isValid();
 
     //values are automatically cast to the desired type
@@ -111,7 +109,7 @@ public class ScalarTest {
   @Test
   public void testLong() {
     Scalar s = Scalar.fromLong(4);
-    assertEquals(DType.INT64, s.getType());
+    assertEquals(TypeId.INT64, s.getType());
     assert s.isValid();
 
     //values are automatically cast to the desired type
@@ -129,7 +127,7 @@ public class ScalarTest {
   @Test
   public void testFloat() {
     Scalar s = Scalar.fromFloat(5.1f);
-    assertEquals(DType.FLOAT32, s.getType());
+    assertEquals(TypeId.FLOAT32, s.getType());
     assert s.isValid();
 
     //values are automatically cast to the desired type
@@ -147,7 +145,7 @@ public class ScalarTest {
   @Test
   public void testDouble() {
     Scalar s = Scalar.fromDouble(6.2);
-    assertEquals(DType.FLOAT64, s.getType());
+    assertEquals(TypeId.FLOAT64, s.getType());
     assert s.isValid();
 
     //values are automatically cast to the desired type
@@ -164,8 +162,10 @@ public class ScalarTest {
 
   @Test
   public void testDate32() {
+    fail();
+/*
     Scalar s = Scalar.dateFromInt(7);
-    assertEquals(DType.DATE32, s.getType());
+    assertEquals(TypeId.DATE32, s.getType());
     assert s.isValid();
 
     //values are automatically cast to the desired type
@@ -178,12 +178,15 @@ public class ScalarTest {
     assertEquals(7.0, s.getDouble());
     assertEquals("7", s.getJavaString());
     assertArrayEquals(new byte[]{'7'}, s.getUTF8());
+*/
   }
 
   @Test
   public void testDate64() {
+    fail();
+/*
     Scalar s = Scalar.dateFromLong(8);
-    assertEquals(DType.DATE64, s.getType());
+    assertEquals(TypeId.DATE64, s.getType());
     assert s.isValid();
 
     //values are automatically cast to the desired type
@@ -196,12 +199,13 @@ public class ScalarTest {
     assertEquals(8.0, s.getDouble());
     assertEquals("8", s.getJavaString());
     assertArrayEquals(new byte[]{'8'}, s.getUTF8());
+*/
   }
 
   @Test
   public void testString() {
     Scalar s = Scalar.fromString("TEST");
-    assertEquals(DType.STRING, s.getType());
+    assertEquals(TypeId.STRING, s.getType());
     assert s.isValid();
 
     //values are automatically cast to the desired type
@@ -219,7 +223,7 @@ public class ScalarTest {
   @Test
   public void testStringNumber() {
     Scalar s = Scalar.fromString("100");
-    assertEquals(DType.STRING, s.getType());
+    assertEquals(TypeId.STRING, s.getType());
     assert s.isValid();
 
     assertEquals(100, s.getByte());
@@ -233,7 +237,7 @@ public class ScalarTest {
   @Test
   public void testStringBool() {
     Scalar s = Scalar.fromString("true");
-    assertEquals(DType.STRING, s.getType());
+    assertEquals(TypeId.STRING, s.getType());
     assert s.isValid();
 
     assertEquals(true, s.getBoolean());

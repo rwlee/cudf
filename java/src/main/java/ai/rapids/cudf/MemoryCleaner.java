@@ -23,7 +23,13 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -176,11 +182,6 @@ class MemoryCleaner {
   }
 
   public static void register(ColumnVector vec, Cleaner cleaner) {
-    // It is now registered...
-    all.add(new CleanerWeakReference(vec, cleaner));
-  }
-
-  public static void register(CudfColumnVector vec, Cleaner cleaner) {
     // It is now registered...
     all.add(new CleanerWeakReference(vec, cleaner));
   }

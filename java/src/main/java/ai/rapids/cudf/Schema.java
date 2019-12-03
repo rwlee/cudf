@@ -28,9 +28,9 @@ public class Schema {
   public static final Schema INFERRED = new Schema();
   private final List<String> names;
   private final List<String> typeNames;
-  private final List<DType> types;
+  private final List<TypeId> types;
 
-  private Schema(List<String> names, List<String> typeNames, List<DType> types) {
+  private Schema(List<String> names, List<String> typeNames, List<TypeId> types) {
     this.names = new ArrayList<>(names);
     this.typeNames = new ArrayList<>(typeNames);
     this.types = types;
@@ -85,8 +85,8 @@ public class Schema {
       throw new IllegalStateException("No type information is available to guess the output size");
     }
     long total = 0;
-    for (DType type: types) {
-      if (type == DType.STRING_CATEGORY || type == DType.STRING) {
+    for (TypeId type: types) {
+      if (type == TypeId.STRING) {
         total += avgStringSize * numRows;
         total += 4 * (numRows + 1); // Offsets
       } else {
@@ -101,13 +101,16 @@ public class Schema {
   public static class Builder {
     private List<String> names = new ArrayList<>();
     private List<String> typeNames = new ArrayList<>();
-    private List<DType> types = new ArrayList<>();
+    private List<TypeId> types = new ArrayList<>();
 
-    public Builder column(DType type, String name) {
+    public Builder column(TypeId type, String name) {
+      throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
+/*
       types.add(type);
       typeNames.add(type.simpleName);
       names.add(name);
       return this;
+*/
     }
 
     public Schema build() {

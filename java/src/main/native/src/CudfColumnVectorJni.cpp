@@ -57,13 +57,6 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_CudfColumn_makeStringCudfColumn(
     std::vector<char> strings(n_char_data, n_char_data + n_data_size);
     std::vector<cudf::size_type> offsets(host_offsets, host_offsets + size + 1);
 
-    for (int i = 0 ; i < n_data_size ; i++) {
-        std::cout << "char: " << strings[i] << std::endl;
-    }
-    for (int i = 0 ; i < size + 1; i++) {
-        std::cout << "off: " << offsets[i] << std::endl;
-    }
-
     std::unique_ptr<cudf::column> column = make_string(strings, offsets);
     cudf::strings::print(cudf::strings_column_view(*column.get()));
     return reinterpret_cast<jlong>(column.release());

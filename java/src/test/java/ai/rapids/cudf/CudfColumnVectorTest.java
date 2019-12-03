@@ -45,9 +45,9 @@ public class CudfColumnVectorTest extends CudfTestBase {
 
   @Test
   void testTransformVector() {
-    try (CudfColumnVector cv = CudfColumnVector.fromBoxedInts(2,3,null,4);
-         CudfColumnVector cv1 = cv.transform(ptx, true);
-         CudfColumnVector expected = CudfColumnVector.fromBoxedInts(2*2-2, 3*3-3, null, 4*4-4)) {
+    try (ColumnVector cv = ColumnVector.fromBoxedInts(2,3,null,4);
+         ColumnVector cv1 = cv.transform(ptx, true);
+         ColumnVector expected = ColumnVector.fromBoxedInts(2*2-2, 3*3-3, null, 4*4-4)) {
       for (int i = 0 ; i < cv1.getRowCount() ; i++) {
         cv1.ensureOnHost();
         assertEquals(expected.isNull(i), cv1.isNull(i));
@@ -60,7 +60,7 @@ public class CudfColumnVectorTest extends CudfTestBase {
 
   @Test
   void testString() {
-    try (CudfColumnVector cv = CudfColumnVector.fromStrings("d", "sd", "sd")) {
+    try (ColumnVector cv = ColumnVector.fromStrings("d", "sd", "sd")) {
       cv.dropHostData();
       cv.ensureOnHost();
       for (int i = 0 ; i < cv.getRowCount() ; i++) {

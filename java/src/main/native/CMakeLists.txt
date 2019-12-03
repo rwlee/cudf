@@ -204,7 +204,6 @@ set(SOURCE_FILES
     "src/NvtxRangeJni.cpp"
     "src/RmmJni.cpp"
     "src/TableJni.cpp"
-    "src/TableViewJni.cpp"
     "src/CudfColumnVectorJni.cpp"
     "src/helper.cu")
 add_library(cudfjni SHARED ${SOURCE_FILES})
