@@ -18,7 +18,7 @@
 
 package ai.rapids.cudf;
 
-public class CudfColumn {
+class CudfColumn {
   public final long nativeHandle;
 
   public CudfColumn(long nativeHandle) {
