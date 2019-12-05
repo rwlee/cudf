@@ -1388,88 +1388,88 @@ public final class Table implements AutoCloseable {
    * tests.
    */
   public static final class TestBuilder {
-    private final List<TypeId> types = new ArrayList<>();
+    private final List<DType> types = new ArrayList<>();
     private final List<Object> typeErasedData = new ArrayList<>();
 
     public TestBuilder column(String... values) {
-      types.add(TypeId.STRING);
+      types.add(DType.STRING);
       typeErasedData.add(values);
       return this;
     }
 
     public TestBuilder column(Boolean... values) {
-      types.add(TypeId.BOOL8);
+      types.add(DType.BOOL8);
       typeErasedData.add(values);
       return this;
     }
 
     public TestBuilder column(Byte... values) {
-      types.add(TypeId.INT8);
+      types.add(DType.INT8);
       typeErasedData.add(values);
       return this;
     }
 
     public TestBuilder column(Short... values) {
-      types.add(TypeId.INT16);
+      types.add(DType.INT16);
       typeErasedData.add(values);
       return this;
     }
 
     public TestBuilder column(Integer... values) {
-      types.add(TypeId.INT32);
+      types.add(DType.INT32);
       typeErasedData.add(values);
       return this;
     }
 
     public TestBuilder column(Long... values) {
-      types.add(TypeId.INT64);
+      types.add(DType.INT64);
       typeErasedData.add(values);
       return this;
     }
 
     public TestBuilder column(Float... values) {
-      types.add(TypeId.FLOAT32);
+      types.add(DType.FLOAT32);
       typeErasedData.add(values);
       return this;
     }
 
     public TestBuilder column(Double... values) {
-      types.add(TypeId.FLOAT64);
+      types.add(DType.FLOAT64);
       typeErasedData.add(values);
       return this;
     }
 
     public TestBuilder timestampDayColumn(Long... values) {
-      types.add(TypeId.TIMESTAMP_DAYS);
+      types.add(DType.TIMESTAMP_DAYS);
       typeErasedData.add(values);
       return this;
     }
 
     public TestBuilder timestampNanosecondsColumn(Long... values) {
-      types.add(TypeId.TIMESTAMP_NANOSECONDS);
+      types.add(DType.TIMESTAMP_NANOSECONDS);
       typeErasedData.add(values);
       return this;
     }
 
     public TestBuilder timestampMillisecondsColumn(Long... values) {
-      types.add(TypeId.TIMESTAMP_MILLISECONDS);
+      types.add(DType.TIMESTAMP_MILLISECONDS);
       typeErasedData.add(values);
       return this;
     }
 
     public TestBuilder timestampMicrosecondsColumn(Long... values) {
-      types.add(TypeId.TIMESTAMP_MICROSECONDS);
+      types.add(DType.TIMESTAMP_MICROSECONDS);
       typeErasedData.add(values);
       return this;
     }
 
     public TestBuilder timestampSecondsColumn(Long... values) {
-      types.add(TypeId.TIMESTAMP_SECONDS);
+      types.add(DType.TIMESTAMP_SECONDS);
       typeErasedData.add(values);
       return this;
     }
 
-    private static ColumnVector from(TypeId type, Object dataArray) {
+    private static ColumnVector from(DType type, Object dataArray) {
       ColumnVector ret = null;
       switch (type) {
         case STRING:

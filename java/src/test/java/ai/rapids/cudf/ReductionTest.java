@@ -34,9 +34,9 @@ class ReductionTest extends CudfTestBase {
   private static Stream<Arguments> createBooleanParams() {
     Boolean[] vals = new Boolean[]{true, true, null, false, true, false, null};
     return Stream.of(
-        Arguments.of(ReductionOp.SUM, new Boolean[0], Scalar.fromNull(TypeId.BOOL8), 0.),
+        Arguments.of(ReductionOp.SUM, new Boolean[0], Scalar.fromNull(DType.BOOL8), 0.),
         Arguments.of(ReductionOp.SUM, new Boolean[]{null, null, null},
-            Scalar.fromNull(TypeId.BOOL8), 0.),
+            Scalar.fromNull(DType.BOOL8), 0.),
         Arguments.of(ReductionOp.SUM, vals, Scalar.fromBool(true), 0.),
         Arguments.of(ReductionOp.MIN, vals, Scalar.fromBool(false), 0.),
         Arguments.of(ReductionOp.MAX, vals, Scalar.fromBool(true), 0.),
@@ -49,8 +49,8 @@ class ReductionTest extends CudfTestBase {
   private static Stream<Arguments> createByteParams() {
     Byte[] vals = new Byte[]{-1, 7, 123, null, 50, 60, 100};
     return Stream.of(
-        Arguments.of(ReductionOp.SUM, new Byte[0], Scalar.fromNull(TypeId.INT8), 0.),
-        Arguments.of(ReductionOp.SUM, new Byte[]{null, null, null}, Scalar.fromNull(TypeId.INT8), 0.),
+        Arguments.of(ReductionOp.SUM, new Byte[0], Scalar.fromNull(DType.INT8), 0.),
+        Arguments.of(ReductionOp.SUM, new Byte[]{null, null, null}, Scalar.fromNull(DType.INT8), 0.),
         Arguments.of(ReductionOp.SUM, vals, Scalar.fromByte((byte) 83), 0.),
         Arguments.of(ReductionOp.MIN, vals, Scalar.fromByte((byte) -1), 0.),
         Arguments.of(ReductionOp.MAX, vals, Scalar.fromByte((byte) 123), 0.),
@@ -63,8 +63,8 @@ class ReductionTest extends CudfTestBase {
   private static Stream<Arguments> createShortParams() {
     Short[] vals = new Short[]{-1, 7, 123, null, 50, 60, 100};
     return Stream.of(
-        Arguments.of(ReductionOp.SUM, new Short[0], Scalar.fromNull(TypeId.INT16), 0.),
-        Arguments.of(ReductionOp.SUM, new Short[]{null, null, null}, Scalar.fromNull(TypeId.INT16), 0.),
+        Arguments.of(ReductionOp.SUM, new Short[0], Scalar.fromNull(DType.INT16), 0.),
+        Arguments.of(ReductionOp.SUM, new Short[]{null, null, null}, Scalar.fromNull(DType.INT16), 0.),
         Arguments.of(ReductionOp.SUM, vals, Scalar.fromShort((short) 339), 0.),
         Arguments.of(ReductionOp.MIN, vals, Scalar.fromShort((short) -1), 0.),
         Arguments.of(ReductionOp.MAX, vals, Scalar.fromShort((short) 123), 0.),
@@ -77,9 +77,9 @@ class ReductionTest extends CudfTestBase {
   private static Stream<Arguments> createIntParams() {
     Integer[] vals = new Integer[]{-1, 7, 123, null, 50, 60, 100};
     return Stream.of(
-        Arguments.of(ReductionOp.SUM, new Integer[0], Scalar.fromNull(TypeId.INT32), 0.),
+        Arguments.of(ReductionOp.SUM, new Integer[0], Scalar.fromNull(DType.INT32), 0.),
         Arguments.of(ReductionOp.SUM, new Integer[]{null, null, null},
-            Scalar.fromNull(TypeId.INT32), 0.),
+            Scalar.fromNull(DType.INT32), 0.),
         Arguments.of(ReductionOp.SUM, vals, Scalar.fromInt(339), 0.),
         Arguments.of(ReductionOp.MIN, vals, Scalar.fromInt(-1), 0.),
         Arguments.of(ReductionOp.MAX, vals, Scalar.fromInt(123), 0.),
@@ -92,8 +92,8 @@ class ReductionTest extends CudfTestBase {
   private static Stream<Arguments> createLongParams() {
     Long[] vals = new Long[]{-1L, 7L, 123L, null, 50L, 60L, 100L};
     return Stream.of(
-        Arguments.of(ReductionOp.SUM, new Long[0], Scalar.fromNull(TypeId.INT64), 0.),
-        Arguments.of(ReductionOp.SUM, new Long[]{null, null, null}, Scalar.fromNull(TypeId.INT64), 0.),
+        Arguments.of(ReductionOp.SUM, new Long[0], Scalar.fromNull(DType.INT64), 0.),
+        Arguments.of(ReductionOp.SUM, new Long[]{null, null, null}, Scalar.fromNull(DType.INT64), 0.),
         Arguments.of(ReductionOp.SUM, vals, Scalar.fromLong(339), 0.),
         Arguments.of(ReductionOp.MIN, vals, Scalar.fromLong(-1), 0.),
         Arguments.of(ReductionOp.MAX, vals, Scalar.fromLong(123), 0.),
@@ -106,9 +106,9 @@ class ReductionTest extends CudfTestBase {
   private static Stream<Arguments> createFloatParams() {
     Float[] vals = new Float[]{-1f, 7f, 123f, null, 50f, 60f, 100f};
     return Stream.of(
-        Arguments.of(ReductionOp.SUM, new Float[0], Scalar.fromNull(TypeId.FLOAT32), 0f),
+        Arguments.of(ReductionOp.SUM, new Float[0], Scalar.fromNull(DType.FLOAT32), 0f),
         Arguments.of(ReductionOp.SUM, new Float[]{null, null, null},
-            Scalar.fromNull(TypeId.FLOAT32), 0f),
+            Scalar.fromNull(DType.FLOAT32), 0f),
         Arguments.of(ReductionOp.SUM, vals, Scalar.fromFloat(339f), 0f),
         Arguments.of(ReductionOp.MIN, vals, Scalar.fromFloat(-1f), 0f),
         Arguments.of(ReductionOp.MAX, vals, Scalar.fromFloat(123f), 0f),
@@ -121,9 +121,9 @@ class ReductionTest extends CudfTestBase {
   private static Stream<Arguments> createDoubleParams() {
     Double[] vals = new Double[]{-1., 7., 123., null, 50., 60., 100.};
     return Stream.of(
-        Arguments.of(ReductionOp.SUM, new Double[0], Scalar.fromNull(TypeId.FLOAT64), 0.),
+        Arguments.of(ReductionOp.SUM, new Double[0], Scalar.fromNull(DType.FLOAT64), 0.),
         Arguments.of(ReductionOp.SUM, new Double[]{null, null, null},
-            Scalar.fromNull(TypeId.FLOAT64), 0.),
+            Scalar.fromNull(DType.FLOAT64), 0.),
         Arguments.of(ReductionOp.SUM, vals, Scalar.fromDouble(339.), 0.),
         Arguments.of(ReductionOp.MIN, vals, Scalar.fromDouble(-1.), 0.),
         Arguments.of(ReductionOp.MAX, vals, Scalar.fromDouble(123.), 0.),

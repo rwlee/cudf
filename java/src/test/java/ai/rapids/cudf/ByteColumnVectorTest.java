@@ -32,7 +32,7 @@ public class ByteColumnVectorTest extends CudfTestBase {
 
   @Test
   public void testCreateColumnVectorBuilder() {
-    try (ColumnVector shortColumnVector = ColumnVector.build(TypeId.INT8, 3,
+    try (ColumnVector shortColumnVector = ColumnVector.build(DType.INT8, 3,
         (b) -> b.append((byte) 1))) {
       assertFalse(shortColumnVector.hasNulls());
     }
@@ -50,7 +50,7 @@ public class ByteColumnVectorTest extends CudfTestBase {
 
   @Test
   public void testAppendRepeatingValues() {
-    try (ColumnVector byteColumnVector = ColumnVector.build(TypeId.INT8, 3,
+    try (ColumnVector byteColumnVector = ColumnVector.build(DType.INT8, 3,
         (b) -> b.append((byte) 2, (long) 3))) {
       assertFalse(byteColumnVector.hasNulls());
       assertEquals(byteColumnVector.getByte(0), 2);
@@ -112,7 +112,7 @@ public class ByteColumnVectorTest extends CudfTestBase {
 
   @Test
   public void testOverrunningTheBuffer() {
-    try (ColumnVector.Builder builder = ColumnVector.builder(TypeId.INT8, 3)) {
+    try (ColumnVector.Builder builder = ColumnVector.builder(DType.INT8, 3)) {
       assertThrows(AssertionError.class,
           () -> builder.append((byte) 2).appendNull().append((byte) 5, (byte) 4).build());
     }
@@ -125,8 +125,8 @@ public class ByteColumnVectorTest extends CudfTestBase {
       for (int dstPrefilledSize = 0; dstPrefilledSize < dstSize; dstPrefilledSize++) {
         final int srcSize = dstSize - dstPrefilledSize;
         for (int sizeOfDataNotToAdd = 0; sizeOfDataNotToAdd <= dstPrefilledSize; sizeOfDataNotToAdd++) {
-          try (ColumnVector.Builder dst = ColumnVector.builder(TypeId.INT8, dstSize);
-               ColumnVector src = ColumnVector.buildOnHost(TypeId.INT8, srcSize, (b) -> {
+          try (ColumnVector.Builder dst = ColumnVector.builder(DType.INT8, dstSize);
+               ColumnVector src = ColumnVector.buildOnHost(DType.INT8, srcSize, (b) -> {
                  for (int i = 0; i < srcSize; i++) {
                    if (random.nextBoolean()) {
                      b.appendNull();
@@ -135,7 +135,7 @@ public class ByteColumnVectorTest extends CudfTestBase {
                    }
                  }
                });
-               ColumnVector.Builder gtBuilder = ColumnVector.builder(TypeId.INT8,
+               ColumnVector.Builder gtBuilder = ColumnVector.builder(DType.INT8,
                    dstPrefilledSize)) {
             assertEquals(dstSize, srcSize + dstPrefilledSize);
             //add the first half of the prefilled list

@@ -39,9 +39,9 @@ public class TableTest extends CudfTestBase {
       "src/test/resources/timestamp-date-test.orc");
 /*
   private static final Schema CSV_DATA_BUFFER_SCHEMA = Schema.builder()
-      .column(TypeId.INT32, "A")
-      .column(TypeId.FLOAT64, "B")
-      .column(TypeId.INT64, "C")
+      .column(DType.INT32, "A")
+      .column(DType.FLOAT64, "B")
+      .column(DType.INT64, "C")
       .build();
 */
   private static final byte[] CSV_DATA_BUFFER = ("A|B|C\n" +
@@ -70,7 +70,7 @@ public class TableTest extends CudfTestBase {
     }
     expected.ensureOnHost();
     cv.ensureOnHost();
-    TypeId type = expected.getType();
+    DType type = expected.getType();
     for (long expectedRow = rowOffset; expectedRow < (rowOffset + length); expectedRow++) {
       long tableRow = expectedRow - rowOffset;
       assertEquals(expected.isNull(expectedRow), cv.isNull(tableRow),
@@ -146,7 +146,7 @@ public class TableTest extends CudfTestBase {
         LongStream.range(0, table.getRowCount()).forEach(row -> {
           ColumnVector cv = table.getColumn(col);
           Object key = 0;
-          if (cv.getType() == TypeId.INT32) {
+          if (cv.getType() == DType.INT32) {
             key = cv.getInt(row);
           } else {
             key = cv.getDouble(row);
@@ -165,12 +165,12 @@ public class TableTest extends CudfTestBase {
     }
   }
 
-  public static void assertTableTypes(TypeId[] expectedTypes, Table t) {
+  public static void assertTableTypes(DType[] expectedTypes, Table t) {
     int len = t.getNumberOfColumns();
     assertEquals(expectedTypes.length, len);
     for (int i = 0; i < len; i++) {
       ColumnVector vec = t.getColumn(i);
-      TypeId type = vec.getType();
+      DType type = vec.getType();
       assertEquals(expectedTypes[i], type, "Types don't match at " + i);
     }
   }
@@ -257,8 +257,8 @@ public class TableTest extends CudfTestBase {
   void testTableCreationIncreasesRefCount() {
     //tests the Table increases the refcount on column vectors
     assertThrows(IllegalStateException.class, () -> {
-      try (ColumnVector v1 = ColumnVector.build(TypeId.INT32, 5, Range.appendInts(5));
-           ColumnVector v2 = ColumnVector.build(TypeId.INT32, 5, Range.appendInts(5))) {
+      try (ColumnVector v1 = ColumnVector.build(DType.INT32, 5, Range.appendInts(5));
+           ColumnVector v2 = ColumnVector.build(DType.INT32, 5, Range.appendInts(5))) {
         assertDoesNotThrow(() -> {
           try (Table t = new Table(new ColumnVector[]{v1, v2})) {
             v1.close();
@@ -271,8 +271,8 @@ public class TableTest extends CudfTestBase {
 
   @Test
   void testGetRows() {
-    try (ColumnVector v1 = ColumnVector.build(TypeId.INT32, 5, Range.appendInts(5));
-         ColumnVector v2 = ColumnVector.build(TypeId.INT32, 5, Range.appendInts(5));
+    try (ColumnVector v1 = ColumnVector.build(DType.INT32, 5, Range.appendInts(5));
+         ColumnVector v2 = ColumnVector.build(DType.INT32, 5, Range.appendInts(5));
          Table t = new Table(new ColumnVector[]{v1, v2})) {
       assertEquals(5, t.getRowCount());
     }
@@ -286,8 +286,8 @@ public class TableTest extends CudfTestBase {
 
   @Test
   void testAllRowsSize() {
-    try (ColumnVector v1 = ColumnVector.build(TypeId.INT32, 4, Range.appendInts(4));
-         ColumnVector v2 = ColumnVector.build(TypeId.INT32, 5, Range.appendInts(5))) {
+    try (ColumnVector v1 = ColumnVector.build(DType.INT32, 4, Range.appendInts(4));
+         ColumnVector v2 = ColumnVector.build(DType.INT32, 5, Range.appendInts(5))) {
       assertThrows(AssertionError.class, () -> {
         try (Table t = new Table(new ColumnVector[]{v1, v2})) {
         }
@@ -297,8 +297,8 @@ public class TableTest extends CudfTestBase {
 
   @Test
   void testGetNumberOfColumns() {
-    try (ColumnVector v1 = ColumnVector.build(TypeId.INT32, 5, Range.appendInts(5));
-         ColumnVector v2 = ColumnVector.build(TypeId.INT32, 5, Range.appendInts(5));
+    try (ColumnVector v1 = ColumnVector.build(DType.INT32, 5, Range.appendInts(5));
+         ColumnVector v2 = ColumnVector.build(DType.INT32, 5, Range.appendInts(5));
          Table t = new Table(new ColumnVector[]{v1, v2})) {
       assertEquals(2, t.getNumberOfColumns());
     }
@@ -307,9 +307,9 @@ public class TableTest extends CudfTestBase {
   @Test
   void testReadCSVPrune() {
     Schema schema = Schema.builder()
-        .column(TypeId.INT32, "A")
-        .column(TypeId.FLOAT64, "B")
-        .column(TypeId.INT64, "C")
+        .column(DType.INT32, "A")
+        .column(DType.FLOAT64, "B")
+        .column(DType.INT64, "C")
         .build();
     CSVOptions opts = CSVOptions.builder()
         .includeColumn("A")
@@ -414,10 +414,10 @@ public class TableTest extends CudfTestBase {
         "9,false,129,\"nine\uD80C\uDC3F\"").getBytes(StandardCharsets.UTF_8);
 
     final Schema CSV_DATA_WITH_TYPES_SCHEMA = Schema.builder()
-        .column(TypeId.INT32, "A")
-        .column(TypeId.BOOL8, "B")
-        .column(TypeId.INT64, "C")
-        .column(TypeId.STRING, "D")
+        .column(DType.INT32, "A")
+        .column(DType.BOOL8, "B")
+        .column(DType.INT64, "C")
+        .column(DType.STRING, "D")
         .build();
 
     CSVOptions opts = CSVOptions.builder()
@@ -441,10 +441,10 @@ public class TableTest extends CudfTestBase {
   @Test
   void testReadCSV() {
     Schema schema = Schema.builder()
-        .column(TypeId.INT32, "A")
-        .column(TypeId.FLOAT64, "B")
-        .column(TypeId.INT64, "C")
-        .column(TypeId.STRING, "D")
+        .column(DType.INT32, "A")
+        .column(DType.FLOAT64, "B")
+        .column(DType.INT64, "C")
+        .column(DType.STRING, "D")
         .build();
     try (Table expected = new Table.TestBuilder()
         .column(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
@@ -467,7 +467,7 @@ public class TableTest extends CudfTestBase {
     try (Table table = Table.readParquet(opts, TEST_PARQUET_FILE)) {
       long rows = table.getRowCount();
       assertEquals(1000, rows);
-      assertTableTypes(new TypeId[]{TypeId.INT64, TypeId.INT32, TypeId.INT32}, table);
+      assertTableTypes(new DType[]{DType.INT64, DType.INT32, DType.INT32}, table);
     }
   }
 
@@ -487,7 +487,7 @@ public class TableTest extends CudfTestBase {
     try (Table table = Table.readParquet(opts, buffer, 0, bufferLen)) {
       long rows = table.getRowCount();
       assertEquals(1000, rows);
-      assertTableTypes(new TypeId[]{TypeId.INT64, TypeId.FLOAT64, TypeId.FLOAT64}, table);
+      assertTableTypes(new DType[]{DType.INT64, DType.FLOAT64, DType.FLOAT64}, table);
     }
   }
 
@@ -1478,7 +1478,7 @@ public class TableTest extends CudfTestBase {
         };
         // check to see the aggregate column type depends on the source column
         // in this case the source column is Integer, therefore the result should be Integer type
-        assertEquals(TypeId.INT32, aggOut0.getType());
+        assertEquals(DType.INT32, aggOut0.getType());
         for (int i = 0; i < 4; ++i) {
           int key = aggOut0.getInt(i);
           assertTrue(expectedAggregateResult.containsKey(key));
@@ -1637,7 +1637,7 @@ public class TableTest extends CudfTestBase {
   @Test
   void testMaskWithValidity() {
     final int numRows = 5;
-    try (ColumnVector.Builder builder = ColumnVector.builder(TypeId.BOOL8, numRows)) {
+    try (ColumnVector.Builder builder = ColumnVector.builder(DType.BOOL8, numRows)) {
       for (int i = 0; i < numRows; ++i) {
         builder.append((byte) 1);
         if (i % 2 != 0) {
@@ -1650,7 +1650,7 @@ public class TableTest extends CudfTestBase {
            Table filteredTable = input.filter(mask)) {
         ColumnVector filtered = filteredTable.getColumn(0);
         filtered.ensureOnHost();
-        assertEquals(TypeId.INT32, filtered.getType());
+        assertEquals(DType.INT32, filtered.getType());
         assertEquals(3, filtered.getRowCount());
         assertEquals(1, filtered.getInt(0));
         assertEquals(2, filtered.getInt(1));
@@ -1668,7 +1668,7 @@ public class TableTest extends CudfTestBase {
          Table filteredTable = input.filter(mask)) {
       ColumnVector filtered = filteredTable.getColumn(0);
       filtered.ensureOnHost();
-      assertEquals(TypeId.INT8, filtered.getType());
+      assertEquals(DType.INT8, filtered.getType());
       assertEquals(3, filtered.getRowCount());
       assertTrue(filtered.isNull(0));
       assertEquals(3, filtered.getByte(1));
@@ -1686,7 +1686,7 @@ public class TableTest extends CudfTestBase {
          Table input = new Table(fromInts);
          Table filteredTable = input.filter(mask)) {
       ColumnVector filtered = filteredTable.getColumn(0);
-      assertEquals(TypeId.INT32, filtered.getType());
+      assertEquals(DType.INT32, filtered.getType());
       assertEquals(0, filtered.getRowCount());
     }
   }
@@ -1694,7 +1694,7 @@ public class TableTest extends CudfTestBase {
   @Test
   void testAllFilteredFromValidity() {
     final int numRows = 5;
-    try (ColumnVector.Builder builder = ColumnVector.builder(TypeId.BOOL8, numRows)) {
+    try (ColumnVector.Builder builder = ColumnVector.builder(DType.BOOL8, numRows)) {
       for (int i = 0; i < numRows; ++i) {
         builder.append((byte) 1);
         builder.setNullAt(i);
@@ -1704,7 +1704,7 @@ public class TableTest extends CudfTestBase {
            Table input = new Table(fromInts);
            Table filteredTable = input.filter(mask)) {
         ColumnVector filtered = filteredTable.getColumn(0);
-        assertEquals(TypeId.INT32, filtered.getType());
+        assertEquals(DType.INT32, filtered.getType());
         assertEquals(0, filtered.getRowCount());
       }
     }
@@ -1777,8 +1777,8 @@ public class TableTest extends CudfTestBase {
   @Test
   void testJSONReadWithFilePathAndDataTypes() throws IOException {
     File tempFile = createTempFile(jsonData);
-    Schema schema = Schema.builder().column(TypeId.INT32, "0")
-        .column(TypeId.FLOAT64, "1").column(TypeId.STRING, "2").build();
+    Schema schema = Schema.builder().column(DType.INT32, "0")
+        .column(DType.FLOAT64, "1").column(DType.STRING, "2").build();
     try (Table t = Table.readJSON(schema, tempFile);
          Table expectedTable = new Table.TestBuilder()
              .column(  1,       3,                  7)
@@ -1803,8 +1803,8 @@ public class TableTest extends CudfTestBase {
 
   @Test
   void testJSONReadBufferWithDataTypes() {
-    Schema schema = Schema.builder().column(TypeId.INT32, "0")
-        .column(TypeId.FLOAT32, "1").column(TypeId.STRING, "2").build();
+    Schema schema = Schema.builder().column(DType.INT32, "0")
+        .column(DType.FLOAT32, "1").column(DType.STRING, "2").build();
     try (Table t = Table.readJSON(schema, jsonData);
          Table expectedTable = new Table.TestBuilder()
              .column(  1,       3,                  7)
@@ -1832,8 +1832,8 @@ public class TableTest extends CudfTestBase {
         "{\"col1\": 7, \"col2\": 1.3, \"col3\": \"seven\u24E1\u25B6\"}")
         .getBytes(StandardCharsets.UTF_8);
 
-    Schema schema = Schema.builder().column(TypeId.FLOAT32, "col2")
-        .column(TypeId.INT64, "col1").column(TypeId.STRING, "col3").build();
+    Schema schema = Schema.builder().column(DType.FLOAT32, "col2")
+        .column(DType.INT64, "col1").column(DType.STRING, "col3").build();
     JSONOptions opts = JSONOptions.builder().includeColumn("col1", "col3").build();
     try (Table t = Table.readJSON(schema, opts, jsonDataWithNames);
          Table expectedTable = new Table.TestBuilder()
@@ -1849,8 +1849,8 @@ public class TableTest extends CudfTestBase {
     // the schema can't skip any column and since we are using json without explicit names provided
     // in the json file we will have to set the data types using the column names that will be used
     // by the libcudf API i.e. 0, 1, 2 ... 
-    Schema schema = Schema.builder().column(TypeId.FLOAT32, "1")
-        .column(TypeId.INT32, "0").column(TypeId.STRING, "2").build();
+    Schema schema = Schema.builder().column(DType.FLOAT32, "1")
+        .column(DType.INT32, "0").column(DType.STRING, "2").build();
     JSONOptions opts = JSONOptions.builder().includeColumn("0", "2").build();
     try (Table t = Table.readJSON(schema, opts, jsonData);
          Table expectedTable = new Table.TestBuilder()

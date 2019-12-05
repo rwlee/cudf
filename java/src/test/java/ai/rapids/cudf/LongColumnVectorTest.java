@@ -32,7 +32,7 @@ public class LongColumnVectorTest extends CudfTestBase {
 
   @Test
   public void testCreateColumnVectorBuilder() {
-    try (ColumnVector longColumnVector = ColumnVector.build(TypeId.INT64, 3, (b) -> b.append(1L))) {
+    try (ColumnVector longColumnVector = ColumnVector.build(DType.INT64, 3, (b) -> b.append(1L))) {
       assertFalse(longColumnVector.hasNulls());
     }
   }
@@ -78,7 +78,7 @@ public class LongColumnVectorTest extends CudfTestBase {
 
   @Test
   public void testOverrunningTheBuffer() {
-    try (ColumnVector.Builder builder = ColumnVector.builder(TypeId.INT64, 3)) {
+    try (ColumnVector.Builder builder = ColumnVector.builder(DType.INT64, 3)) {
       assertThrows(AssertionError.class,
           () -> builder.append(2L).appendNull().append(5L).append(4L).build());
     }
@@ -91,8 +91,8 @@ public class LongColumnVectorTest extends CudfTestBase {
       for (int dstPrefilledSize = 0; dstPrefilledSize < dstSize; dstPrefilledSize++) {
         final int srcSize = dstSize - dstPrefilledSize;
         for (int sizeOfDataNotToAdd = 0; sizeOfDataNotToAdd <= dstPrefilledSize; sizeOfDataNotToAdd++) {
-          try (ColumnVector.Builder dst = ColumnVector.builder(TypeId.INT64, dstSize);
-               ColumnVector src = ColumnVector.buildOnHost(TypeId.INT64, srcSize, (b) -> {
+          try (ColumnVector.Builder dst = ColumnVector.builder(DType.INT64, dstSize);
+               ColumnVector src = ColumnVector.buildOnHost(DType.INT64, srcSize, (b) -> {
                  for (int i = 0; i < srcSize; i++) {
                    if (random.nextBoolean()) {
                      b.appendNull();
@@ -101,7 +101,7 @@ public class LongColumnVectorTest extends CudfTestBase {
                    }
                  }
                });
-               ColumnVector.Builder gtBuilder = ColumnVector.builder(TypeId.INT64,
+               ColumnVector.Builder gtBuilder = ColumnVector.builder(DType.INT64,
                    dstPrefilledSize)) {
             assertEquals(dstSize, srcSize + dstPrefilledSize);
             //add the first half of the prefilled list
