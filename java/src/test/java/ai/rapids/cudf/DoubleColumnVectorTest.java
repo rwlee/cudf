@@ -31,7 +31,7 @@ public class DoubleColumnVectorTest extends CudfTestBase {
 
   @Test
   public void testCreateColumnVectorBuilder() {
-    try (ColumnVector doubleColumnVector = ColumnVector.build(TypeId.FLOAT64, 3,
+    try (ColumnVector doubleColumnVector = ColumnVector.build(DType.FLOAT64, 3,
         (b) -> b.append(1.0))) {
       assertFalse(doubleColumnVector.hasNulls());
     }
@@ -79,7 +79,7 @@ public class DoubleColumnVectorTest extends CudfTestBase {
 
   @Test
   public void testOverrunningTheBuffer() {
-    try (ColumnVector.Builder builder = ColumnVector.builder(TypeId.FLOAT64, 3)) {
+    try (ColumnVector.Builder builder = ColumnVector.builder(DType.FLOAT64, 3)) {
       assertThrows(AssertionError.class,
           () -> builder.append(2.1).appendNull().appendArray(new double[]{5.003, 4.0}).build());
     }
@@ -92,8 +92,8 @@ public class DoubleColumnVectorTest extends CudfTestBase {
       for (int dstPrefilledSize = 0; dstPrefilledSize < dstSize; dstPrefilledSize++) {
         final int srcSize = dstSize - dstPrefilledSize;
         for (int sizeOfDataNotToAdd = 0; sizeOfDataNotToAdd <= dstPrefilledSize; sizeOfDataNotToAdd++) {
-          try (ColumnVector.Builder dst = ColumnVector.builder(TypeId.FLOAT64, dstSize);
-               ColumnVector src = ColumnVector.buildOnHost(TypeId.FLOAT64, srcSize, (b) -> {
+          try (ColumnVector.Builder dst = ColumnVector.builder(DType.FLOAT64, dstSize);
+               ColumnVector src = ColumnVector.buildOnHost(DType.FLOAT64, srcSize, (b) -> {
                  for (int i = 0; i < srcSize; i++) {
                    if (random.nextBoolean()) {
                      b.appendNull();
@@ -102,7 +102,7 @@ public class DoubleColumnVectorTest extends CudfTestBase {
                    }
                  }
                });
-               ColumnVector.Builder gtBuilder = ColumnVector.builder(TypeId.FLOAT64,
+               ColumnVector.Builder gtBuilder = ColumnVector.builder(DType.FLOAT64,
                    dstPrefilledSize)) {
             assertEquals(dstSize, srcSize + dstPrefilledSize);
             //add the first half of the prefilled list

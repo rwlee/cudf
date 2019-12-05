@@ -25,20 +25,20 @@ class Cudf {
 
   /* arith */
 
-  static long gdfUnaryMath(ColumnVector input, UnaryOp op, TypeId outputType) {
+  static long gdfUnaryMath(ColumnVector input, UnaryOp op, DType outputType) {
     return gdfUnaryMath(input.getNativeCudfColumnAddress(), op.nativeId, outputType.nativeId);
   }
 
   private static native long gdfUnaryMath(long input, int op, int dtype);
 
-  static long gdfBinaryOp(ColumnVector lhs, ColumnVector rhs, BinaryOp op, TypeId outputType) {
+  static long gdfBinaryOp(ColumnVector lhs, ColumnVector rhs, BinaryOp op, DType outputType) {
     return gdfBinaryOpVV(lhs.getNativeCudfColumnAddress(), rhs.getNativeCudfColumnAddress(),
         op.nativeId, outputType.nativeId);
   }
 
   private static native long gdfBinaryOpVV(long lhs, long rhs, int op, int dtype);
 
-  static long gdfBinaryOp(Scalar lhs, ColumnVector rhs, BinaryOp op, TypeId outputType) {
+  static long gdfBinaryOp(Scalar lhs, ColumnVector rhs, BinaryOp op, DType outputType) {
     throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
 /*
     if (rhs.getType() == TypeId.STRING_CATEGORY && lhs.getType() == TypeId.STRING
@@ -58,7 +58,7 @@ class Cudf {
                                            long rhs,
                                            int op, int dtype);
 
-  static long gdfBinaryOp(ColumnVector lhs, Scalar rhs, BinaryOp op, TypeId outputType) {
+  static long gdfBinaryOp(ColumnVector lhs, Scalar rhs, BinaryOp op, DType outputType) {
     throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
 /*
     if (lhs.getType() == TypeId.STRING_CATEGORY && rhs.getType() == TypeId.STRING
@@ -139,7 +139,7 @@ class Cudf {
   private static native void fill(long input, long sIntValues, float sFValue,
                                   double sDValue, boolean sIsValid, int sDtype);
 
-  static Scalar reduce(ColumnVector v, ReductionOp op, TypeId outType) {
+  static Scalar reduce(ColumnVector v, ReductionOp op, DType outType) {
     return reduce(v.getNativeCudfColumnAddress(), op.nativeId, outType.nativeId);
   }
 
@@ -183,7 +183,7 @@ class Cudf {
 
   private static native long gdfExtractDatetimeSecond(long input) throws CudfException;
 
-  static long gdfCast(ColumnVector input, TypeId outType, TimeUnit outUnit) {
+  static long gdfCast(ColumnVector input, DType outType, TimeUnit outUnit) {
     return gdfCast(input.getNativeCudfColumnAddress(), outType.nativeId, outUnit.getNativeId());
   }
 

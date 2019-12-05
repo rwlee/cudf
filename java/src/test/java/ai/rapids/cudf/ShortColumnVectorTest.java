@@ -32,7 +32,7 @@ public class ShortColumnVectorTest extends CudfTestBase {
 
   @Test
   public void testCreateColumnVectorBuilder() {
-    try (ColumnVector shortColumnVector = ColumnVector.build(TypeId.INT16, 3,
+    try (ColumnVector shortColumnVector = ColumnVector.build(DType.INT16, 3,
         (b) -> b.append((short) 1))) {
       assertFalse(shortColumnVector.hasNulls());
     }
@@ -83,7 +83,7 @@ public class ShortColumnVectorTest extends CudfTestBase {
 
   @Test
   public void testOverrunningTheBuffer() {
-    try (ColumnVector.Builder builder = ColumnVector.builder(TypeId.INT16, 3)) {
+    try (ColumnVector.Builder builder = ColumnVector.builder(DType.INT16, 3)) {
       assertThrows(AssertionError.class,
           () -> builder.append((short) 2).appendNull().appendArray(new short[]{5, 4}).build());
     }
@@ -96,8 +96,8 @@ public class ShortColumnVectorTest extends CudfTestBase {
       for (int dstPrefilledSize = 0; dstPrefilledSize < dstSize; dstPrefilledSize++) {
         final int srcSize = dstSize - dstPrefilledSize;
         for (int sizeOfDataNotToAdd = 0; sizeOfDataNotToAdd <= dstPrefilledSize; sizeOfDataNotToAdd++) {
-          try (ColumnVector.Builder dst = ColumnVector.builder(TypeId.INT16, dstSize);
-               ColumnVector src = ColumnVector.buildOnHost(TypeId.INT16, srcSize, (b) -> {
+          try (ColumnVector.Builder dst = ColumnVector.builder(DType.INT16, dstSize);
+               ColumnVector src = ColumnVector.buildOnHost(DType.INT16, srcSize, (b) -> {
                  for (int i = 0; i < srcSize; i++) {
                    if (random.nextBoolean()) {
                      b.appendNull();
@@ -106,7 +106,7 @@ public class ShortColumnVectorTest extends CudfTestBase {
                    }
                  }
                });
-               ColumnVector.Builder gtBuilder = ColumnVector.builder(TypeId.INT16,
+               ColumnVector.Builder gtBuilder = ColumnVector.builder(DType.INT16,
                    dstPrefilledSize)) {
             assertEquals(dstSize, srcSize + dstPrefilledSize);
             //add the first half of the prefilled list

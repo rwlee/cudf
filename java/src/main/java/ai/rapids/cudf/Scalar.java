@@ -20,7 +20,6 @@ package ai.rapids.cudf;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.Objects;
 
 /**
@@ -30,7 +29,7 @@ public final class Scalar implements BinaryOperable {
   /**
    * Generic NULL value.
    */
-  public static final Scalar NULL = new Scalar(TypeId.INT8, TimeUnit.NONE);
+  public static final Scalar NULL = new Scalar(DType.INT8, TimeUnit.NONE);
 
 /*
   private static final EnumSet<TypeId> INTEGRAL_TYPES = EnumSet.of(
@@ -50,13 +49,13 @@ public final class Scalar implements BinaryOperable {
   final float floatTypeStorage;
   final double doubleTypeStorage;
   final byte[] stringTypeStorage;
-  final TypeId type;
+  final DType type;
   final boolean isValid;
   // TimeUnit is not currently used by scalar values.  There are no operations that need it
   // When this changes we can support it.
   final TimeUnit timeUnit;
 
-  private Scalar(long value, TypeId type, TimeUnit unit) {
+  private Scalar(long value, DType type, TimeUnit unit) {
     intTypeStorage = value;
     floatTypeStorage = 0;
     doubleTypeStorage = 0;
@@ -66,7 +65,7 @@ public final class Scalar implements BinaryOperable {
     timeUnit = unit;
   }
 
-  private Scalar(float value, TypeId type, TimeUnit unit) {
+  private Scalar(float value, DType type, TimeUnit unit) {
     intTypeStorage = 0;
     floatTypeStorage = value;
     doubleTypeStorage = 0;
@@ -76,7 +75,7 @@ public final class Scalar implements BinaryOperable {
     timeUnit = unit;
   }
 
-  private Scalar(double value, TypeId type, TimeUnit unit) {
+  private Scalar(double value, DType type, TimeUnit unit) {
     intTypeStorage = 0;
     floatTypeStorage = 0;
     doubleTypeStorage = value;
@@ -86,7 +85,7 @@ public final class Scalar implements BinaryOperable {
     timeUnit = unit;
   }
 
-  private Scalar(byte[] value, TypeId type, TimeUnit unit) {
+  private Scalar(byte[] value, DType type, TimeUnit unit) {
     intTypeStorage = 0;
     floatTypeStorage = 0;
     doubleTypeStorage = 0;
@@ -96,7 +95,7 @@ public final class Scalar implements BinaryOperable {
     timeUnit = unit;
   }
 
-  private Scalar(TypeId type, TimeUnit unit) {
+  private Scalar(DType type, TimeUnit unit) {
     intTypeStorage = 0;
     floatTypeStorage = 0;
     doubleTypeStorage = 0;
@@ -108,7 +107,7 @@ public final class Scalar implements BinaryOperable {
 
   // These are invoked by native code to construct scalars.
   static Scalar fromNull(int dtype) {
-    return new Scalar(TypeId.fromNative(dtype), TimeUnit.NONE);
+    return new Scalar(DType.fromNative(dtype), TimeUnit.NONE);
   }
 
   static Scalar timestampFromNull(int nativeTimeUnit) {
@@ -122,7 +121,7 @@ public final class Scalar implements BinaryOperable {
   // These Scalar factory methods are called from native code.
   // If a new scalar type is supported then CudfJni also needs to be updated.
 
-  public static Scalar fromNull(TypeId dtype) {
+  public static Scalar fromNull(DType dtype) {
     return new Scalar(dtype, TimeUnit.NONE);
   }
 
@@ -132,19 +131,19 @@ public final class Scalar implements BinaryOperable {
   }
 
   public static Scalar fromBool(boolean value) {
-    return new Scalar(value ? 1 : 0, TypeId.BOOL8, TimeUnit.NONE);
+    return new Scalar(value ? 1 : 0, DType.BOOL8, TimeUnit.NONE);
   }
 
   public static Scalar fromByte(byte value) {
-    return new Scalar(value, TypeId.INT8, TimeUnit.NONE);
+    return new Scalar(value, DType.INT8, TimeUnit.NONE);
   }
 
   public static Scalar fromShort(short value) {
-    return new Scalar(value, TypeId.INT16, TimeUnit.NONE);
+    return new Scalar(value, DType.INT16, TimeUnit.NONE);
   }
 
   public static Scalar fromInt(int value) {
-    return new Scalar(value, TypeId.INT32, TimeUnit.NONE);
+    return new Scalar(value, DType.INT32, TimeUnit.NONE);
   }
 
   public static Scalar dateFromInt(int value) {
@@ -153,7 +152,7 @@ public final class Scalar implements BinaryOperable {
   }
 
   public static Scalar fromLong(long value) {
-    return new Scalar(value, TypeId.INT64, TimeUnit.NONE);
+    return new Scalar(value, DType.INT64, TimeUnit.NONE);
   }
 
   public static Scalar dateFromLong(long value) {
@@ -177,15 +176,15 @@ public final class Scalar implements BinaryOperable {
   }
 
   public static Scalar fromFloat(float value) {
-    return new Scalar(value, TypeId.FLOAT32, TimeUnit.NONE);
+    return new Scalar(value, DType.FLOAT32, TimeUnit.NONE);
   }
 
   public static Scalar fromDouble(double value) {
-    return new Scalar(value, TypeId.FLOAT64, TimeUnit.NONE);
+    return new Scalar(value, DType.FLOAT64, TimeUnit.NONE);
   }
 
   public static Scalar fromString(String value) {
-    return new Scalar(value.getBytes(StandardCharsets.UTF_8), TypeId.STRING, TimeUnit.NONE);
+    return new Scalar(value.getBytes(StandardCharsets.UTF_8), DType.STRING, TimeUnit.NONE);
   }
 
   public boolean isValid() {
@@ -193,7 +192,7 @@ public final class Scalar implements BinaryOperable {
   }
 
   @Override
-  public TypeId getType() {
+  public DType getType() {
     return type;
   }
 
@@ -360,14 +359,14 @@ public final class Scalar implements BinaryOperable {
    * Returns the scalar value as UTF-8 data.
    */
   public byte[] getUTF8() {
-    if (type == TypeId.STRING) {
+    if (type == DType.STRING) {
       return stringTypeStorage;
     }
     return getJavaString().getBytes(StandardCharsets.UTF_8);
   }
 
   @Override
-  public ColumnVector binaryOp(BinaryOp op, BinaryOperable rhs, TypeId outType) {
+  public ColumnVector binaryOp(BinaryOp op, BinaryOperable rhs, DType outType) {
     throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
 /*
     if (rhs instanceof ColumnVector) {

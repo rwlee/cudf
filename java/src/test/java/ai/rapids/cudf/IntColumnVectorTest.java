@@ -31,7 +31,7 @@ public class IntColumnVectorTest extends CudfTestBase {
 
   @Test
   public void testCreateColumnVectorBuilder() {
-    try (ColumnVector intColumnVector = ColumnVector.build(TypeId.INT32, 3, (b) -> b.append(1))) {
+    try (ColumnVector intColumnVector = ColumnVector.build(DType.INT32, 3, (b) -> b.append(1))) {
       assertFalse(intColumnVector.hasNulls());
     }
   }
@@ -77,7 +77,7 @@ public class IntColumnVectorTest extends CudfTestBase {
 
   @Test
   public void testOverrunningTheBuffer() {
-    try (ColumnVector.Builder builder = ColumnVector.builder(TypeId.INT32, 3)) {
+    try (ColumnVector.Builder builder = ColumnVector.builder(DType.INT32, 3)) {
       assertThrows(AssertionError.class,
           () -> builder.append(2).appendNull().appendArray(new int[]{5, 4}).build());
     }
@@ -105,8 +105,8 @@ public class IntColumnVectorTest extends CudfTestBase {
       for (int dstPrefilledSize = 0; dstPrefilledSize < dstSize; dstPrefilledSize++) {
         final int srcSize = dstSize - dstPrefilledSize;
         for (int sizeOfDataNotToAdd = 0; sizeOfDataNotToAdd <= dstPrefilledSize; sizeOfDataNotToAdd++) {
-          try (ColumnVector.Builder dst = ColumnVector.builder(TypeId.INT32, dstSize);
-               ColumnVector src = ColumnVector.buildOnHost(TypeId.INT32, srcSize, (b) -> {
+          try (ColumnVector.Builder dst = ColumnVector.builder(DType.INT32, dstSize);
+               ColumnVector src = ColumnVector.buildOnHost(DType.INT32, srcSize, (b) -> {
                  for (int i = 0; i < srcSize; i++) {
                    if (random.nextBoolean()) {
                      b.appendNull();
@@ -115,7 +115,7 @@ public class IntColumnVectorTest extends CudfTestBase {
                    }
                  }
                });
-               ColumnVector.Builder gtBuilder = ColumnVector.builder(TypeId.INT32,
+               ColumnVector.Builder gtBuilder = ColumnVector.builder(DType.INT32,
                    dstPrefilledSize)) {
             assertEquals(dstSize, srcSize + dstPrefilledSize);
             //add the first half of the prefilled list

@@ -38,34 +38,34 @@ public interface BinaryOperable {
    * BOOL8 is treated like an INT8.  Math on boolean operations makes little sense.  If
    * you want to to stay as a BOOL8 you will need to explicitly specify the output type.
    */
-  static TypeId implicitConversion(BinaryOperable lhs, BinaryOperable rhs) {
-    TypeId a = lhs.getType();
-    TypeId b = rhs.getType();
-    if (a == TypeId.FLOAT64 || b == TypeId.FLOAT64) {
-      return TypeId.FLOAT64;
+  static DType implicitConversion(BinaryOperable lhs, BinaryOperable rhs) {
+    DType a = lhs.getType();
+    DType b = rhs.getType();
+    if (a == DType.FLOAT64 || b == DType.FLOAT64) {
+      return DType.FLOAT64;
     }
-    if (a == TypeId.FLOAT32 || b == TypeId.FLOAT32) {
-      return TypeId.FLOAT32;
+    if (a == DType.FLOAT32 || b == DType.FLOAT32) {
+      return DType.FLOAT32;
     }
-    if (a == TypeId.INT64 || b == TypeId.INT64 ||
-        a == TypeId.TIMESTAMP_MILLISECONDS || b == TypeId.TIMESTAMP_MILLISECONDS ||
-        a == TypeId.TIMESTAMP_MICROSECONDS || b == TypeId.TIMESTAMP_MICROSECONDS ||
-        a == TypeId.TIMESTAMP_SECONDS || b == TypeId.TIMESTAMP_SECONDS ||
-        a == TypeId.TIMESTAMP_NANOSECONDS || b == TypeId.TIMESTAMP_NANOSECONDS) {
-      return TypeId.INT64;
+    if (a == DType.INT64 || b == DType.INT64 ||
+        a == DType.TIMESTAMP_MILLISECONDS || b == DType.TIMESTAMP_MILLISECONDS ||
+        a == DType.TIMESTAMP_MICROSECONDS || b == DType.TIMESTAMP_MICROSECONDS ||
+        a == DType.TIMESTAMP_SECONDS || b == DType.TIMESTAMP_SECONDS ||
+        a == DType.TIMESTAMP_NANOSECONDS || b == DType.TIMESTAMP_NANOSECONDS) {
+      return DType.INT64;
     }
-    if (a == TypeId.INT32 || b == TypeId.INT32 ||
-        a == TypeId.TIMESTAMP_DAYS || b == TypeId.TIMESTAMP_DAYS) {
-      return TypeId.INT32;
+    if (a == DType.INT32 || b == DType.INT32 ||
+        a == DType.TIMESTAMP_DAYS || b == DType.TIMESTAMP_DAYS) {
+      return DType.INT32;
     }
-    if (a == TypeId.INT16 || b == TypeId.INT16) {
-      return TypeId.INT16;
+    if (a == DType.INT16 || b == DType.INT16) {
+      return DType.INT16;
     }
-    if (a == TypeId.INT8 || b == TypeId.INT8) {
-      return TypeId.INT8;
+    if (a == DType.INT8 || b == DType.INT8) {
+      return DType.INT8;
     }
-    if (a == TypeId.BOOL8 || b == TypeId.BOOL8) {
-      return TypeId.BOOL8;
+    if (a == DType.BOOL8 || b == DType.BOOL8) {
+      return DType.BOOL8;
     }
     throw new IllegalArgumentException("Unsupported types " + a + " and " + b);
   }
@@ -73,7 +73,7 @@ public interface BinaryOperable {
   /**
    * Get the type of this data.
    */
-  TypeId getType();
+  DType getType();
 
   /**
    * Multiple different binary operations.
@@ -82,12 +82,12 @@ public interface BinaryOperable {
    * @param outType the type of output you want.
    * @return the result
    */
-  ColumnVector binaryOp(BinaryOp op, BinaryOperable rhs, TypeId outType);
+  ColumnVector binaryOp(BinaryOp op, BinaryOperable rhs, DType outType);
 
   /**
    * Add + operator. this + rhs
    */
-  default ColumnVector add(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector add(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.ADD, rhs, outType);
   }
 
@@ -101,7 +101,7 @@ public interface BinaryOperable {
   /**
    * Subtract one vector from another with the given output type. this - rhs
    */
-  default ColumnVector sub(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector sub(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.SUB, rhs, outType);
   }
 
@@ -115,7 +115,7 @@ public interface BinaryOperable {
   /**
    * Multiply two vectors together with the given output type. this * rhs
    */
-  default ColumnVector mul(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector mul(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.MUL, rhs, outType);
   }
 
@@ -129,7 +129,7 @@ public interface BinaryOperable {
   /**
    * Divide one vector by another with the given output type. this / rhs
    */
-  default ColumnVector div(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector div(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.DIV, rhs, outType);
   }
 
@@ -144,7 +144,7 @@ public interface BinaryOperable {
    * Divide one vector by another converting to FLOAT64 in between with the given output type.
    * (double)this / (double)rhs
    */
-  default ColumnVector trueDiv(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector trueDiv(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.TRUE_DIV, rhs, outType);
   }
 
@@ -160,7 +160,7 @@ public interface BinaryOperable {
    * Divide one vector by another and calculate the floor of the result with the given output type.
    * Math.floor(this/rhs)
    */
-  default ColumnVector floorDiv(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector floorDiv(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.FLOOR_DIV, rhs, outType);
   }
 
@@ -176,7 +176,7 @@ public interface BinaryOperable {
    * Compute the modulus with the given output type.
    * this % rhs
    */
-  default ColumnVector mod(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector mod(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.MOD, rhs, outType);
   }
 
@@ -192,7 +192,7 @@ public interface BinaryOperable {
    * Compute the power with the given output type.
    * Math.pow(this, rhs)
    */
-  default ColumnVector pow(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector pow(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.POW, rhs, outType);
   }
 
@@ -207,7 +207,7 @@ public interface BinaryOperable {
   /**
    * this == rhs 1 is true 0 is false with the output cast to the given type.
    */
-  default ColumnVector equalTo(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector equalTo(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.EQUAL, rhs, outType);
   }
 
@@ -215,13 +215,13 @@ public interface BinaryOperable {
    * this == rhs 1 is true 0 is false.  The output type is BOOL8.
    */
   default ColumnVector equalTo(BinaryOperable rhs) {
-    return equalTo(rhs, TypeId.BOOL8);
+    return equalTo(rhs, DType.BOOL8);
   }
 
   /**
    * this != rhs 1 is true 0 is false with the output cast to the given type.
    */
-  default ColumnVector notEqualTo(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector notEqualTo(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.NOT_EQUAL, rhs, outType);
   }
 
@@ -229,13 +229,13 @@ public interface BinaryOperable {
    * this != rhs 1 is true 0 is false. The output type is BOOL8.
    */
   default ColumnVector notEqualTo(BinaryOperable rhs) {
-    return notEqualTo(rhs, TypeId.BOOL8);
+    return notEqualTo(rhs, DType.BOOL8);
   }
 
   /**
    * this < rhs 1 is true 0 is false with the output cast to the given type.
    */
-  default ColumnVector lessThan(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector lessThan(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.LESS, rhs, outType);
   }
 
@@ -243,13 +243,13 @@ public interface BinaryOperable {
    * this < rhs 1 is true 0 is false.  The output type is BOOL8.
    */
   default ColumnVector lessThan(BinaryOperable rhs) {
-    return lessThan(rhs, TypeId.BOOL8);
+    return lessThan(rhs, DType.BOOL8);
   }
 
   /**
    * this > rhs 1 is true 0 is false with the output cast to the given type.
    */
-  default ColumnVector greaterThan(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector greaterThan(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.GREATER, rhs, outType);
   }
 
@@ -257,13 +257,13 @@ public interface BinaryOperable {
    * this > rhs 1 is true 0 is false.  The output type is BOOL8.
    */
   default ColumnVector greaterThan(BinaryOperable rhs) {
-    return greaterThan(rhs, TypeId.BOOL8);
+    return greaterThan(rhs, DType.BOOL8);
   }
 
   /**
    * this <= rhs 1 is true 0 is false with the output cast to the given type.
    */
-  default ColumnVector lessOrEqualTo(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector lessOrEqualTo(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.LESS_EQUAL, rhs, outType);
   }
 
@@ -271,13 +271,13 @@ public interface BinaryOperable {
    * this <= rhs 1 is true 0 is false.  The output type is BOOL8.
    */
   default ColumnVector lessOrEqualTo(BinaryOperable rhs) {
-    return lessOrEqualTo(rhs, TypeId.BOOL8);
+    return lessOrEqualTo(rhs, DType.BOOL8);
   }
 
   /**
    * this >= rhs 1 is true 0 is false with the output cast to the given type.
    */
-  default ColumnVector greaterOrEqualTo(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector greaterOrEqualTo(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.GREATER_EQUAL, rhs, outType);
   }
 
@@ -285,13 +285,13 @@ public interface BinaryOperable {
    * this >= rhs 1 is true 0 is false.  The output type is BOOL8.
    */
   default ColumnVector greaterOrEqualTo(BinaryOperable rhs) {
-    return greaterOrEqualTo(rhs, TypeId.BOOL8);
+    return greaterOrEqualTo(rhs, DType.BOOL8);
   }
 
   /**
    * Bit wise and (&) with the given output type. this & rhs
    */
-  default ColumnVector bitAnd(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector bitAnd(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.BITWISE_AND, rhs, outType);
   }
 
@@ -305,7 +305,7 @@ public interface BinaryOperable {
   /**
    * Bit wise or (|) with the given output type. this | rhs
    */
-  default ColumnVector bitOr(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector bitOr(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.BITWISE_OR, rhs, outType);
   }
 
@@ -319,7 +319,7 @@ public interface BinaryOperable {
   /**
    * Bit wise xor (^) with the given output type. this ^ rhs
    */
-  default ColumnVector bitXor(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector bitXor(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.BITWISE_XOR, rhs, outType);
   }
 
@@ -333,7 +333,7 @@ public interface BinaryOperable {
   /**
    * Logical and (&&) with the given output type. this && rhs
    */
-  default ColumnVector and(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector and(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.LOGICAL_AND, rhs, outType);
   }
 
@@ -347,7 +347,7 @@ public interface BinaryOperable {
   /**
    * Logical or (||) with the given output type. this || rhs  
    */
-  default ColumnVector or(BinaryOperable rhs, TypeId outType) {
+  default ColumnVector or(BinaryOperable rhs, DType outType) {
     return binaryOp(BinaryOp.LOGICAL_OR, rhs, outType);
   }
 

@@ -25,8 +25,8 @@ class CudfColumn {
     this.nativeHandle = nativeHandle;
   }
 
-  public CudfColumn(TypeId typeId, int rows, MaskState maskState) {
-      this.nativeHandle = makeNumericCudfColumn(typeId.nativeId, rows, maskState.nativeId);
+  public CudfColumn(DType DType, int rows, MaskState maskState) {
+      this.nativeHandle = makeNumericCudfColumn(DType.nativeId, rows, maskState.nativeId);
   }
 
   public CudfColumn(long charData, long offsetData, long validData, int nullCount, int rows) {
