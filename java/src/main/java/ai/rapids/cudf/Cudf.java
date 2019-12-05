@@ -25,12 +25,6 @@ class Cudf {
 
   /* arith */
 
-  static long gdfUnaryMath(ColumnVector input, UnaryOp op, DType outputType) {
-    return gdfUnaryMath(input.getNativeCudfColumnAddress(), op.nativeId, outputType.nativeId);
-  }
-
-  private static native long gdfUnaryMath(long input, int op, int dtype);
-
   static long gdfBinaryOp(ColumnVector lhs, ColumnVector rhs, BinaryOp op, DType outputType) {
     return gdfBinaryOpVV(lhs.getNativeCudfColumnAddress(), rhs.getNativeCudfColumnAddress(),
         op.nativeId, outputType.nativeId);

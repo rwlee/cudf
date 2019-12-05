@@ -558,10 +558,13 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
         }
         if (type != DType.STRING) {
           if (offHeap.getDeviceData().valid != null) {
-            offHeap.getDeviceData().valid.copyFromHostBuffer(offHeap.getHostData().valid);
+            DeviceMemoryBufferView valid = offHeap.getDeviceData().valid;
+            valid.copyFromHostBuffer(offHeap.getHostData().valid, 0, valid.length);
           }
-
-          offHeap.getDeviceData().data.copyFromHostBuffer(offHeap.getHostData().data);
+          DeviceMemoryBufferView data = offHeap.getDeviceData().data;
+          // The host side data may be larger than the device side because we allocated more rows
+          // Than needed
+          data.copyFromHostBuffer(offHeap.getHostData().data, 0, data.length);
         }
       }
     }
@@ -903,12 +906,9 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * Get the value at index.
    */
   public byte getByte(long index) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert type == TypeId.INT8 || type == TypeId.BOOL8;
+    assert type == DType.INT8 || type == DType.BOOL8;
     assertsForGet(index);
     return offHeap.getHostData().data.getByte(index * type.sizeInBytes);
-*/
   }
 
   /**
@@ -987,24 +987,18 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * Get the value at index.
    */
   public final double getDouble(long index) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert type == TypeId.FLOAT64;
+    assert type == DType.FLOAT64;
     assertsForGet(index);
     return offHeap.getHostData().data.getDouble(index * type.sizeInBytes);
-*/
   }
 
   /**
    * Get the boolean value at index
    */
   public final boolean getBoolean(long index) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert type == TypeId.BOOL8;
+    assert type == DType.BOOL8;
     assertsForGet(index);
     return offHeap.getHostData().data.getBoolean(index * type.sizeInBytes);
-*/
   }
 
   /**
@@ -1139,118 +1133,100 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return the result
    */
   public ColumnVector unaryOp(UnaryOp op) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     try (DevicePrediction prediction = new DevicePrediction(getDeviceMemorySize(), "unaryOp")) {
-      return new ColumnVector(Cudf.gdfUnaryMath(this, op, type));
+      return new ColumnVector(unaryOperation(getNativeCudfColumnAddress(), op.nativeId));
     }
-*/
   }
 
   /**
    * Calculate the sin, output is the same type as input.
    */
   public ColumnVector sin() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     return unaryOp(UnaryOp.SIN);
-*/
   }
 
   /**
    * Calculate the cos, output is the same type as input.
    */
   public ColumnVector cos() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return unaryOp(UnaryOp.COS);
+    return unaryOp(UnaryOp.COS);
   }
 
   /**
    * Calculate the tan, output is the same type as input.
    */
   public ColumnVector tan() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return unaryOp(UnaryOp.TAN);
+    return unaryOp(UnaryOp.TAN);
   }
 
   /**
    * Calculate the arcsin, output is the same type as input.
    */
   public ColumnVector arcsin() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return unaryOp(UnaryOp.ARCSIN);
+    return unaryOp(UnaryOp.ARCSIN);
   }
 
   /**
    * Calculate the arccos, output is the same type as input.
    */
   public ColumnVector arccos() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return unaryOp(UnaryOp.ARCCOS);
+    return unaryOp(UnaryOp.ARCCOS);
   }
 
   /**
    * Calculate the arctan, output is the same type as input.
    */
   public ColumnVector arctan() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return unaryOp(UnaryOp.ARCTAN);
+    return unaryOp(UnaryOp.ARCTAN);
   }
 
   /**
    * Calculate the exp, output is the same type as input.
    */
   public ColumnVector exp() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return unaryOp(UnaryOp.EXP);
+    return unaryOp(UnaryOp.EXP);
   }
 
   /**
    * Calculate the log, output is the same type as input.
    */
   public ColumnVector log() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return unaryOp(UnaryOp.LOG);
+    return unaryOp(UnaryOp.LOG);
   }
 
   /**
    * Calculate the sqrt, output is the same type as input.
    */
   public ColumnVector sqrt() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return unaryOp(UnaryOp.SQRT);
+    return unaryOp(UnaryOp.SQRT);
   }
 
   /**
    * Calculate the ceil, output is the same type as input.
    */
   public ColumnVector ceil() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return unaryOp(UnaryOp.CEIL);
+    return unaryOp(UnaryOp.CEIL);
   }
 
   /**
    * Calculate the floor, output is the same type as input.
    */
   public ColumnVector floor() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return unaryOp(UnaryOp.FLOOR);
+    return unaryOp(UnaryOp.FLOOR);
   }
 
   /**
    * Calculate the abs, output is the same type as input.
    */
   public ColumnVector abs() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return unaryOp(UnaryOp.ABS);
+    return unaryOp(UnaryOp.ABS);
   }
 
   /**
    * invert the bits, output is the same type as input.
    */
   public ColumnVector bitInvert() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return unaryOp(UnaryOp.BIT_INVERT);
+    return unaryOp(UnaryOp.BIT_INVERT);
   }
 
   /**
@@ -1733,8 +1709,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * column (this)
    */
   public ColumnVector not() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return unaryOp(UnaryOp.NOT);
+    return unaryOp(UnaryOp.NOT);
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -2186,6 +2161,8 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 
 //  private static native long concatenate(long[] columnHandles) throws CudfException;
 
+  private static native long unaryOperation(long input, int op);
+
   /////////////////////////////////////////////////////////////////////////////
   // HELPER CLASSES
   /////////////////////////////////////////////////////////////////////////////
@@ -2590,8 +2567,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * for tests.
    */
   public static ColumnVector fromBoxedBooleans(Boolean... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.BOOL8, values.length, (b) -> b.appendBoxed(values));
+    return build(DType.BOOL8, values.length, (b) -> b.appendBoxed(values));
   }
 
   /**
@@ -2649,8 +2625,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * for tests.
    */
   public static ColumnVector fromBoxedDoubles(Double... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.FLOAT64, values.length, (b) -> b.appendBoxed(values));
+    return build(DType.FLOAT64, values.length, (b) -> b.appendBoxed(values));
   }
 
   /**

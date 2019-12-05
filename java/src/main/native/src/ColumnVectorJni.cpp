@@ -13,6 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include <cudf/column/column.hpp>
+#include <cudf/column/column_view.hpp>
+#include <cudf/unary.hpp>
 #include "cudf/legacy/copying.hpp"
 #include "cudf/legacy/quantiles.hpp"
 #include "cudf/legacy/replace.hpp"
@@ -702,5 +706,18 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_findAndReplaceAll(JNIEn
   }
   CATCH_STD(env, 0);
 }
+
+JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_unaryOperation(JNIEnv *env, jclass,
+        jlong input_ptr, jint int_op) {
+  JNI_NULL_CHECK(env, input_ptr, "input is null", 0);
+  try {
+    cudf::column *input = reinterpret_cast<cudf::column *>(input_ptr);
+    cudf::experimental::unary_op op = static_cast<cudf::experimental::unary_op>(int_op);
+    std::unique_ptr<cudf::column> ret = cudf::experimental::unary_operation(input->view(), op);
+    return reinterpret_cast<jlong>(ret.release());
+  }
+  CATCH_STD(env, 0);
+}
+
 
 } // extern "C"
