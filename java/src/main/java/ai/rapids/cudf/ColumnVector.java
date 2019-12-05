@@ -485,8 +485,6 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * Drop any data stored on the device, but move it to the host first if necessary.
    */
   public final void dropDeviceData() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     ensureOnHost();
     if (offHeap.deviceData != null) {
       long amount = getDeviceMemorySize();
@@ -496,13 +494,11 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
       // Just do it to make sure the cache is updated
       offHeap.getDeviceMemoryLength(type, true);
       // We have to free the cudf column to handle Strings properly
-      if (offHeap.cudfColumnHandle != 0) {
-        freeCudfColumn(offHeap.cudfColumnHandle, false);
-        offHeap.cudfColumnHandle = 0;
+      if (offHeap.cudfColumnHandle != null) {
+        offHeap.cudfColumnHandle.deleteCudfColumn();
+        offHeap.cudfColumnHandle = null;
       }
-
     }
-*/
   }
 
   /**
