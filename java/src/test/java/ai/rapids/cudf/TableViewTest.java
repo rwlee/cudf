@@ -35,10 +35,7 @@ public class TableViewTest extends CudfTestBase {
          ColumnVector expected = ColumnVector.fromInts(3, 2, 1, 0, 5, 4)) {
         columnVector.ensureOnHost();
       for (int i = 0 ; i < expected.getRowCount() ; i++) {
-        assertEquals(expected.isNull(i), columnVector.isNull(i));
-        if (!expected.isNull(i)) {
-          assertEquals(expected.getInt(i), columnVector.getInt(i));
-        }
+        TableTest.assertColumnsAreEqual(expected, columnVector);
       }
     }
   }

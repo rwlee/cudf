@@ -37,11 +37,13 @@ public class TableTest extends CudfTestBase {
   private static final File TEST_ORC_FILE = new File("src/test/resources/TestOrcFile.orc");
   private static final File TEST_ORC_TIMESTAMP_DATE_FILE = new File(
       "src/test/resources/timestamp-date-test.orc");
+/*
   private static final Schema CSV_DATA_BUFFER_SCHEMA = Schema.builder()
       .column(TypeId.INT32, "A")
       .column(TypeId.FLOAT64, "B")
       .column(TypeId.INT64, "C")
       .build();
+*/
   private static final byte[] CSV_DATA_BUFFER = ("A|B|C\n" +
       "'0'|'110.0'|'120'\n" +
       "1|111.0|121\n" +
@@ -59,8 +61,6 @@ public class TableTest extends CudfTestBase {
   }
 
   public static void assertPartialColumnsAreEqual(ColumnVector expected, long rowOffset, long length, ColumnVector cv, String colName, boolean enableNullCheck) {
-    fail();
-/*
     assertEquals(expected.getType(), cv.getType(), "Type For Column " + colName);
     assertEquals(length, cv.getRowCount(), "Row Count For Column " + colName);
     if (enableNullCheck) {
@@ -68,7 +68,6 @@ public class TableTest extends CudfTestBase {
     } else {
       // TODO add in a proper check when null counts are supported by serializing a partitioned column
     }
-    assertEquals(expected.getTimeUnit(), cv.getTimeUnit(), "TimeUnit for Column " + colName);
     expected.ensureOnHost();
     cv.ensureOnHost();
     TypeId type = expected.getType();
@@ -88,13 +87,15 @@ public class TableTest extends CudfTestBase {
                 "Column " + colName + " Row " + tableRow);
             break;
           case INT32: // fall through
-          case DATE32:
+          case TIMESTAMP_DAYS:
             assertEquals(expected.getInt(expectedRow), cv.getInt(tableRow),
                 "Column " + colName + " Row " + tableRow);
             break;
           case INT64: // fall through
-          case DATE64: // fall through
-          case TIMESTAMP:
+          case TIMESTAMP_MICROSECONDS: // fall through
+          case TIMESTAMP_MILLISECONDS: // fall through
+          case TIMESTAMP_NANOSECONDS: // fall through
+          case TIMESTAMP_SECONDS:
             assertEquals(expected.getLong(expectedRow), cv.getLong(tableRow),
                 "Column " + colName + " Row " + tableRow);
             break;
@@ -106,8 +107,7 @@ public class TableTest extends CudfTestBase {
             assertEquals(expected.getDouble(expectedRow), cv.getDouble(tableRow), 0.0001,
                 "Column " + colName + " Row " + tableRow);
             break;
-          case STRING: // fall through
-          case STRING_CATEGORY:
+          case STRING:
             assertEquals(expected.getJavaString(expectedRow), cv.getJavaString(tableRow),
                 "Column " + colName + " Row " + tableRow);
             break;
@@ -116,7 +116,6 @@ public class TableTest extends CudfTestBase {
         }
       }
     }
-*/
   }
 
   public static void assertColumnsAreEqual(ColumnVector expected, ColumnVector cv, String colName) {
@@ -356,6 +355,8 @@ public class TableTest extends CudfTestBase {
 
   @Test
   void testReadCSVBuffer() {
+    fail();
+/*
     CSVOptions opts = CSVOptions.builder()
         .includeColumn("A")
         .includeColumn("B")
@@ -372,10 +373,13 @@ public class TableTest extends CudfTestBase {
              TableTest.CSV_DATA_BUFFER)) {
       assertTablesAreEqual(expected, table);
     }
+*/
   }
 
   @Test
   void testReadCSVWithOffset() {
+    fail();
+/*
     CSVOptions opts = CSVOptions.builder()
         .includeColumn("A")
         .includeColumn("B")
@@ -392,6 +396,7 @@ public class TableTest extends CudfTestBase {
              TableTest.CSV_DATA_BUFFER, bytesToIgnore, CSV_DATA_BUFFER.length - bytesToIgnore)) {
       assertTablesAreEqual(expected, table);
     }
+*/
   }
 
   @Test
