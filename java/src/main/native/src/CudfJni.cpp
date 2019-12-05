@@ -284,21 +284,6 @@ JNIEXPORT void JNI_OnUnload(JavaVM *vm, void *) {
   cudf::jni::release_scalar_jni(env);
 }
 
-JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_Cudf_gdfUnaryMath(JNIEnv *env, jclass, jlong input_ptr,
-                                                              jint int_op, jint out_dtype) {
-  JNI_NULL_CHECK(env, input_ptr, "input is null", 0);
-  try {
-    gdf_column *input = reinterpret_cast<gdf_column *>(input_ptr);
-    gdf_dtype out_type = static_cast<gdf_dtype>(out_dtype);
-    cudf::unary_op op = static_cast<cudf::unary_op>(int_op);
-    std::unique_ptr<gdf_column, decltype(free) *> ret(
-        static_cast<gdf_column *>(malloc(sizeof(gdf_column))), free);
-    *ret.get() = cudf::unary_operation(*input, op);
-    return reinterpret_cast<jlong>(ret.release());
-  }
-  CATCH_STD(env, 0);
-}
-
 JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_Cudf_gdfBinaryOpVV(JNIEnv *env, jclass, jlong lhs_ptr,
                                                                jlong rhs_ptr, jint int_op,
                                                                jint out_dtype) {
