@@ -133,7 +133,6 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
   /**
    * Create a new column vector based off of data already on the device.
    * @param type the type of the vector
-   * @param tsTimeUnit the unit of time for this vector
    * @param rows the number of rows in this vector.
    * @param nullCount the number of nulls in the dataset.
    * @param dataBuffer the data stored on the device.  The column vector takes ownership of the
@@ -150,7 +149,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    *                              new 0.  This is used after serializing a partition, when the
    *                              offsets were not updated prior to the serialization.
    */
-  ColumnVector(DType type, TimeUnit tsTimeUnit, long rows,
+  ColumnVector(DType type, long rows,
                long nullCount, DeviceMemoryBuffer dataBuffer, DeviceMemoryBuffer validityBuffer,
                HostMemoryBuffer offsetBuffer, boolean resetOffsetsFromFirst) {
     throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
@@ -416,17 +415,6 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    */
   public boolean hasNulls() {
     return getNullCount() > 0;
-  }
-
-  /**
-   * For vector types that support a TimeUnit (TIMESTAMP),
-   * get the unit of time. Will be NONE for vectors that
-   * did not have one set.  For a TIMESTAMP NONE is the default
-   * unit which should be the same as MILLISECONDS.
-   */
-  public TimeUnit getTimeUnit() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return tsTimeUnit;
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -959,13 +947,10 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return - A new INT16 vector allocated on the GPU.
    */
   public ColumnVector year() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert type == TypeId.DATE32 || type == TypeId.DATE64 || type == TypeId.TIMESTAMP;
-    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(TypeId.INT16), "year")) {
-      return new ColumnVector(Cudf.gdfExtractDatetimeYear(this));
+    assert type.isTimestamp();
+    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(DType.INT16), "year")) {
+      return new ColumnVector(year(getNativeCudfColumnAddress()));
     }
-*/
   }
 
   /**
@@ -976,13 +961,10 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return - A new INT16 vector allocated on the GPU.
    */
   public ColumnVector month() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert type == TypeId.DATE32 || type == TypeId.DATE64 || type == TypeId.TIMESTAMP;
-    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(TypeId.INT16), "month")) {
-      return new ColumnVector(Cudf.gdfExtractDatetimeMonth(this));
+    assert type.isTimestamp();
+    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(DType.INT16), "month")) {
+      return new ColumnVector(month(getNativeCudfColumnAddress()));
     }
-*/
   }
 
   /**
@@ -993,13 +975,10 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return - A new INT16 vector allocated on the GPU.
    */
   public ColumnVector day() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert type == TypeId.DATE32 || type == TypeId.DATE64 || type == TypeId.TIMESTAMP;
-    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(TypeId.INT16), "day")) {
-      return new ColumnVector(Cudf.gdfExtractDatetimeDay(this));
+    assert type.isTimestamp();
+    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(DType.INT16), "day")) {
+      return new ColumnVector(day(getNativeCudfColumnAddress()));
     }
-*/
   }
 
   /**
@@ -1010,13 +989,10 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return - A new INT16 vector allocated on the GPU.
    */
   public ColumnVector hour() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert type == TypeId.DATE64 || type == TypeId.TIMESTAMP;
-    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(TypeId.INT16), "hour")) {
-      return new ColumnVector(Cudf.gdfExtractDatetimeHour(this));
+    assert type.hasTimeResolution();
+    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(DType.INT16), "hour")) {
+      return new ColumnVector(hour(getNativeCudfColumnAddress()));
     }
-*/
   }
 
   /**
@@ -1027,13 +1003,10 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return - A new INT16 vector allocated on the GPU.
    */
   public ColumnVector minute() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert type == TypeId.DATE64 || type == TypeId.TIMESTAMP;
-    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(TypeId.INT16), "minute")) {
-      return new ColumnVector(Cudf.gdfExtractDatetimeMinute(this));
+    assert type.hasTimeResolution();
+    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(DType.INT16), "minute")) {
+      return new ColumnVector(minute(getNativeCudfColumnAddress()));
     }
-*/
   }
 
   /**
@@ -1044,13 +1017,10 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return - A new INT16 vector allocated on the GPU.
    */
   public ColumnVector second() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert type == TypeId.DATE64 || type == TypeId.TIMESTAMP;
-    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(TypeId.INT16), "second")) {
-      return new ColumnVector(Cudf.gdfExtractDatetimeSecond(this));
+    assert type.hasTimeResolution();
+    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(DType.INT16), "second")) {
+      return new ColumnVector(second(getNativeCudfColumnAddress()));
     }
-*/
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -2092,6 +2062,18 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
   private static native long isNotNullNative(long nativeHandle);
 
   private static native long unaryOperation(long input, int op);
+  
+  private static native long year(long input) throws CudfException;
+
+  private static native long month(long input) throws CudfException;
+
+  private static native long day(long input) throws CudfException;
+
+  private static native long hour(long input) throws CudfException;
+
+  private static native long minute(long input) throws CudfException;
+
+  private static native long second(long input) throws CudfException;
 
   /////////////////////////////////////////////////////////////////////////////
   // HELPER CLASSES
@@ -2420,33 +2402,36 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
   /**
    * Create a new vector from the given values.
    */
-  public static ColumnVector datesFromInts(int... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.DATE32, values.length, (b) -> b.appendArray(values));
+  public static ColumnVector daysFromInts(int... values) {
+    return build(DType.TIMESTAMP_DAYS, values.length, (b) -> b.appendArray(values));
   }
 
   /**
    * Create a new vector from the given values.
    */
-  public static ColumnVector datesFromLongs(long... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.DATE64, values.length, (b) -> b.appendArray(values));
+  public static ColumnVector timestampSecondsFromLongs(long... values) {
+    return build(DType.TIMESTAMP_SECONDS, values.length, (b) -> b.appendArray(values));
   }
 
   /**
    * Create a new vector from the given values.
    */
-  public static ColumnVector timestampsFromLongs(long... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.TIMESTAMP, values.length, (b) -> b.appendArray(values));
+  public static ColumnVector timestampMilliSecondsFromLongs(long... values) {
+    return build(DType.TIMESTAMP_MILLISECONDS, values.length, (b) -> b.appendArray(values));
   }
 
   /**
    * Create a new vector from the given values.
    */
-  public static ColumnVector timestampsFromLongs(TimeUnit tsTimeUnit, long... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.TIMESTAMP, tsTimeUnit, values.length, (b) -> b.appendArray(values));
+  public static ColumnVector timestampMicroSecondsFromLongs(long... values) {
+    return build(DType.TIMESTAMP_MICROSECONDS, values.length, (b) -> b.appendArray(values));
+  }
+
+  /**
+   * Create a new vector from the given values.
+   */
+  public static ColumnVector timestampNanoSecondsFromLongs(long... values) {
+    return build(DType.TIMESTAMP_NANOSECONDS, values.length, (b) -> b.appendArray(values));
   }
 
   private static ColumnVector fromStrings(DType type, String... values) {

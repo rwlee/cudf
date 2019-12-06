@@ -38,7 +38,7 @@ public class Date32ColumnVectorTest extends CudfTestBase {
 
   @Test
   public void getYear() {
-    try (ColumnVector date32ColumnVector = ColumnVector.datesFromInts(DATES);
+    try (ColumnVector date32ColumnVector = ColumnVector.daysFromInts(DATES);
          ColumnVector result = date32ColumnVector.year()) {
       result.ensureOnHost();
       int expected = 2019;
@@ -50,7 +50,7 @@ public class Date32ColumnVectorTest extends CudfTestBase {
 
   @Test
   public void getMonth() {
-    try (ColumnVector date32ColumnVector = ColumnVector.datesFromInts(DATES);
+    try (ColumnVector date32ColumnVector = ColumnVector.daysFromInts(DATES);
          ColumnVector result = date32ColumnVector.month()) {
       result.ensureOnHost();
       for (int i = 0; i < DATES.length; i++) {
@@ -61,7 +61,7 @@ public class Date32ColumnVectorTest extends CudfTestBase {
 
   @Test
   public void getDay() {
-    try (ColumnVector date32ColumnVector = ColumnVector.datesFromInts(DATES_2);
+    try (ColumnVector date32ColumnVector = ColumnVector.daysFromInts(DATES_2);
          ColumnVector result = date32ColumnVector.day()) {
       result.ensureOnHost();
       for (int i = 0; i < DATES_2.length; i++) {

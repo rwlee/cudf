@@ -107,17 +107,16 @@ public class TimestampColumnVectorTest extends CudfTestBase {
 
   @Test
   public void getYear() {
-    try (ColumnVector timestampColumnVector = ColumnVector.timestampsFromLongs(TIMES_MS);
+    try (ColumnVector timestampColumnVector = ColumnVector.timestampMilliSecondsFromLongs(TIMES_MS);
          ColumnVector result = timestampColumnVector.year();) {
-      assert timestampColumnVector.getTimeUnit() == TimeUnit.MILLISECONDS;
+      assert timestampColumnVector.getType() == DType.TIMESTAMP_MILLISECONDS;
       result.ensureOnHost();
       assertEquals(1965, result.getShort(0));
       assertEquals(2018, result.getShort(1));
       assertEquals(2023, result.getShort(2));
     }
 
-    try (ColumnVector timestampColumnVector = ColumnVector.timestampsFromLongs(TimeUnit.SECONDS,
-        TIMES_S);
+    try (ColumnVector timestampColumnVector = ColumnVector.timestampSecondsFromLongs(TIMES_S);
       ColumnVector result = timestampColumnVector.year()) {
       result.ensureOnHost();
       assertEquals(1965, result.getShort(0));
@@ -128,17 +127,16 @@ public class TimestampColumnVectorTest extends CudfTestBase {
 
   @Test
   public void getMonth() {
-    try (ColumnVector timestampColumnVector = ColumnVector.timestampsFromLongs(TIMES_MS);
+    try (ColumnVector timestampColumnVector = ColumnVector.timestampMilliSecondsFromLongs(TIMES_MS);
          ColumnVector result = timestampColumnVector.month()) {
-      assert timestampColumnVector.getTimeUnit() == TimeUnit.MILLISECONDS;
+      assert timestampColumnVector.getType() == DType.TIMESTAMP_MILLISECONDS;
       result.ensureOnHost();
       assertEquals(10, result.getShort(0));
       assertEquals(7, result.getShort(1));
       assertEquals(1, result.getShort(2));
     }
 
-    try (ColumnVector timestampColumnVector = ColumnVector.timestampsFromLongs(TimeUnit.SECONDS,
-        TIMES_S);
+    try (ColumnVector timestampColumnVector = ColumnVector.timestampSecondsFromLongs(TIMES_S);
          ColumnVector result = timestampColumnVector.month()) {
       result.ensureOnHost();
       assertEquals(10, result.getShort(0));
@@ -149,8 +147,8 @@ public class TimestampColumnVectorTest extends CudfTestBase {
 
   @Test
   public void getDay() {
-    try (ColumnVector timestampColumnVector = ColumnVector.timestampsFromLongs(TIMES_MS)) {
-      assert timestampColumnVector.getTimeUnit() == TimeUnit.MILLISECONDS;
+    try (ColumnVector timestampColumnVector = ColumnVector.timestampMilliSecondsFromLongs(TIMES_MS)) {
+      assert timestampColumnVector.getType() == DType.TIMESTAMP_MILLISECONDS;
       try (ColumnVector result = timestampColumnVector.day()) {
         result.ensureOnHost();
         assertEquals(26, result.getShort(0));
@@ -159,8 +157,7 @@ public class TimestampColumnVectorTest extends CudfTestBase {
       }
     }
 
-    try (ColumnVector timestampColumnVector = ColumnVector.timestampsFromLongs(TimeUnit.SECONDS,
-        TIMES_S);
+    try (ColumnVector timestampColumnVector = ColumnVector.timestampSecondsFromLongs(TIMES_S);
          ColumnVector result = timestampColumnVector.day()) {
       result.ensureOnHost();
       assertEquals(26, result.getShort(0));
@@ -171,8 +168,8 @@ public class TimestampColumnVectorTest extends CudfTestBase {
 
   @Test
   public void getHour() {
-    try (ColumnVector timestampColumnVector = ColumnVector.timestampsFromLongs(TIMES_MS)) {
-      assert timestampColumnVector.getTimeUnit() == TimeUnit.MILLISECONDS;
+    try (ColumnVector timestampColumnVector = ColumnVector.timestampMilliSecondsFromLongs(TIMES_MS)) {
+      assert timestampColumnVector.getType() == DType.TIMESTAMP_MILLISECONDS;
       try (ColumnVector result = timestampColumnVector.hour()) {
         result.ensureOnHost();
         assertEquals(14, result.getShort(0));
@@ -181,8 +178,7 @@ public class TimestampColumnVectorTest extends CudfTestBase {
       }
     }
 
-    try (ColumnVector timestampColumnVector = ColumnVector.timestampsFromLongs(TimeUnit.SECONDS,
-        TIMES_S);
+    try (ColumnVector timestampColumnVector = ColumnVector.timestampSecondsFromLongs(TIMES_S);
          ColumnVector result = timestampColumnVector.hour()) {
       result.ensureOnHost();
       assertEquals(14, result.getShort(0));
@@ -193,8 +189,8 @@ public class TimestampColumnVectorTest extends CudfTestBase {
 
   @Test
   public void getMinute() {
-    try (ColumnVector timestampColumnVector = ColumnVector.timestampsFromLongs(TIMES_MS)) {
-      assert timestampColumnVector.getTimeUnit() == TimeUnit.MILLISECONDS;
+    try (ColumnVector timestampColumnVector = ColumnVector.timestampMilliSecondsFromLongs(TIMES_MS)) {
+      assert timestampColumnVector.getType() == DType.TIMESTAMP_MILLISECONDS;
       try (ColumnVector result = timestampColumnVector.minute()) {
         result.ensureOnHost();
         assertEquals(1, result.getShort(0));
@@ -203,8 +199,7 @@ public class TimestampColumnVectorTest extends CudfTestBase {
       }
     }
 
-    try (ColumnVector timestampColumnVector = ColumnVector.timestampsFromLongs(TimeUnit.SECONDS,
-        TIMES_S);
+    try (ColumnVector timestampColumnVector = ColumnVector.timestampSecondsFromLongs(TIMES_S);
          ColumnVector result = timestampColumnVector.minute()) {
       result.ensureOnHost();
       assertEquals(1, result.getShort(0));
@@ -215,8 +210,8 @@ public class TimestampColumnVectorTest extends CudfTestBase {
 
   @Test
   public void getSecond() {
-    try (ColumnVector timestampColumnVector = ColumnVector.timestampsFromLongs(TIMES_MS)) {
-      assert timestampColumnVector.getTimeUnit() == TimeUnit.MILLISECONDS;
+    try (ColumnVector timestampColumnVector = ColumnVector.timestampMilliSecondsFromLongs(TIMES_MS)) {
+      assert timestampColumnVector.getType() == DType.TIMESTAMP_MILLISECONDS;
       try (ColumnVector result = timestampColumnVector.second()) {
         result.ensureOnHost();
         assertEquals(12, result.getShort(0));
@@ -225,8 +220,7 @@ public class TimestampColumnVectorTest extends CudfTestBase {
       }
     }
 
-    try (ColumnVector timestampColumnVector = ColumnVector.timestampsFromLongs(TimeUnit.SECONDS,
-        TIMES_S);
+    try (ColumnVector timestampColumnVector = ColumnVector.timestampSecondsFromLongs(TIMES_S);
          ColumnVector result = timestampColumnVector.second()) {
       result.ensureOnHost();
       assertEquals(12, result.getShort(0));
@@ -237,7 +231,7 @@ public class TimestampColumnVectorTest extends CudfTestBase {
 
   @Test
   public void testCastToTimestamp() {
-    try (ColumnVector date64ColumnVector = ColumnVector.timestampsFromLongs(TIMES_MS);
+    try (ColumnVector date64ColumnVector = ColumnVector.timestampMilliSecondsFromLongs(TIMES_MS);
          ColumnVector timestampColumnVector = date64ColumnVector.asTimestamp(TimeUnit.SECONDS)) {
       timestampColumnVector.ensureOnHost();
       assertEquals(-131968728L, timestampColumnVector.getLong(0));
@@ -252,7 +246,7 @@ public class TimestampColumnVectorTest extends CudfTestBase {
          ColumnVector ms_string_times = ColumnVector.fromStrings(TIMES_MS_STRING);
          ColumnVector us_string_times = ColumnVector.fromStrings(TIMES_US_STRING);
          ColumnVector ns_string_times = ColumnVector.fromStrings(TIMES_NS_STRING);
-         ColumnVector s_expected = ColumnVector.timestampsFromLongs(TimeUnit.SECONDS, TIMES_S);
+         ColumnVector s_expected = ColumnVector.timestampSecondsFromLongs(TIMES_S);
          ColumnVector s_result = s_string_times.asTimestamp(TimeUnit.SECONDS, "%Y-%m-%d %H:%M:%S");
          ColumnVector ms_result = ms_string_times.asTimestamp(TimeUnit.SECONDS, "%Y-%m-%d %H:%M:%S.%f");
          ColumnVector us_result = us_string_times.asTimestamp(TimeUnit.SECONDS, "%Y-%m-%d %H:%M:%S.%f");
@@ -271,7 +265,7 @@ public class TimestampColumnVectorTest extends CudfTestBase {
          ColumnVector us_string_times = ColumnVector.fromStrings(TIMES_US_STRING);
          ColumnVector ns_string_times = ColumnVector.fromStrings(TIMES_NS_STRING);
          ColumnVector s_expected = asTSAndClose(mulThouAndClose(ColumnVector.fromLongs(TIMES_S), 1), TimeUnit.MILLISECONDS);
-         ColumnVector ms_expected = ColumnVector.timestampsFromLongs(TimeUnit.MILLISECONDS, TIMES_MS);
+         ColumnVector ms_expected = ColumnVector.timestampMilliSecondsFromLongs(TIMES_MS);
          ColumnVector s_result = s_string_times.asTimestamp(TimeUnit.NONE, "%Y-%m-%d %H:%M:%S");
          ColumnVector ms_result = ms_string_times.asTimestamp(TimeUnit.MILLISECONDS, "%Y-%m-%d %H:%M:%S.%f");
          ColumnVector us_result = us_string_times.asTimestamp(TimeUnit.NONE, "%Y-%m-%d %H:%M:%S.%f");
@@ -291,7 +285,7 @@ public class TimestampColumnVectorTest extends CudfTestBase {
          ColumnVector ns_string_times = ColumnVector.fromStrings(TIMES_NS_STRING);
          ColumnVector s_expected = asTSAndClose(mulThouAndClose(ColumnVector.fromLongs(TIMES_S), 2), TimeUnit.MICROSECONDS);
          ColumnVector ms_expected = asTSAndClose(mulThouAndClose(ColumnVector.fromLongs(TIMES_MS), 1), TimeUnit.MICROSECONDS);
-         ColumnVector us_expected = ColumnVector.timestampsFromLongs(TimeUnit.MICROSECONDS, TIMES_US);
+         ColumnVector us_expected = ColumnVector.timestampMicroSecondsFromLongs(TIMES_US);
          ColumnVector s_result = s_string_times.asTimestamp(TimeUnit.MICROSECONDS, "%Y-%m-%d %H:%M:%S");
          ColumnVector ms_result = ms_string_times.asTimestamp(TimeUnit.MICROSECONDS, "%Y-%m-%d %H:%M:%S.%f");
          ColumnVector us_result = us_string_times.asTimestamp(TimeUnit.MICROSECONDS, "%Y-%m-%d %H:%M:%S.%f");
@@ -312,7 +306,7 @@ public class TimestampColumnVectorTest extends CudfTestBase {
          ColumnVector s_expected = asTSAndClose(mulThouAndClose(ColumnVector.fromLongs(TIMES_S), 3), TimeUnit.NANOSECONDS);
          ColumnVector ms_expected = asTSAndClose(mulThouAndClose(ColumnVector.fromLongs(TIMES_MS), 2), TimeUnit.NANOSECONDS);
          ColumnVector us_expected = asTSAndClose(mulThouAndClose(ColumnVector.fromLongs(TIMES_US), 1), TimeUnit.NANOSECONDS);
-         ColumnVector ns_expected = ColumnVector.timestampsFromLongs(TimeUnit.NANOSECONDS, TIMES_NS);
+         ColumnVector ns_expected = ColumnVector.timestampNanoSecondsFromLongs(TIMES_NS);
          ColumnVector s_result = s_string_times.asTimestamp(TimeUnit.NANOSECONDS, "%Y-%m-%d %H:%M:%S");
          ColumnVector ms_result = ms_string_times.asTimestamp(TimeUnit.NANOSECONDS, "%Y-%m-%d %H:%M:%S.%f");
          ColumnVector us_result = us_string_times.asTimestamp(TimeUnit.NANOSECONDS, "%Y-%m-%d %H:%M:%S.%f");
@@ -330,7 +324,7 @@ public class TimestampColumnVectorTest extends CudfTestBase {
          ColumnVector ms_string_times = ColumnVector.categoryFromStrings(TIMES_MS_STRING);
          ColumnVector us_string_times = ColumnVector.categoryFromStrings(TIMES_US_STRING);
          ColumnVector ns_string_times = ColumnVector.categoryFromStrings(TIMES_NS_STRING);
-         ColumnVector s_expected = ColumnVector.timestampsFromLongs(TimeUnit.SECONDS, TIMES_S);
+         ColumnVector s_expected = ColumnVector.timestampSecondsFromLongs(TIMES_S);
          ColumnVector s_result = s_string_times.asTimestamp(TimeUnit.SECONDS, "%Y-%m-%d %H:%M:%S");
          ColumnVector ms_result = ms_string_times.asTimestamp(TimeUnit.SECONDS, "%Y-%m-%d %H:%M:%S.%f");
          ColumnVector us_result = us_string_times.asTimestamp(TimeUnit.SECONDS, "%Y-%m-%d %H:%M:%S.%f");
@@ -347,9 +341,9 @@ public class TimestampColumnVectorTest extends CudfTestBase {
     try (ColumnVector ms_string_times = ColumnVector.categoryFromStrings(TIMES_MS_STRING);
          ColumnVector us_string_times = ColumnVector.categoryFromStrings(TIMES_US_STRING);
          ColumnVector ns_string_times = ColumnVector.categoryFromStrings(TIMES_NS_STRING);
-         ColumnVector ms_expected = ColumnVector.timestampsFromLongs(TimeUnit.MILLISECONDS, TIMES_MS);
-         ColumnVector us_expected = ColumnVector.timestampsFromLongs(TimeUnit.MICROSECONDS, TIMES_US);
-         ColumnVector ns_expected = ColumnVector.timestampsFromLongs(TimeUnit.NANOSECONDS, TIMES_NS);
+         ColumnVector ms_expected = ColumnVector.timestampMilliSecondsFromLongs(TIMES_MS);
+         ColumnVector us_expected = ColumnVector.timestampMicroSecondsFromLongs(TIMES_US);
+         ColumnVector ns_expected = ColumnVector.timestampNanoSecondsFromLongs(TIMES_NS);
          ColumnVector ms_result = ms_string_times.asTimestamp(TimeUnit.MILLISECONDS, "%Y-%m-%d %H:%M:%S.%f");
          ColumnVector ms_result_null = ms_string_times.asTimestamp(TimeUnit.NONE, "%Y-%m-%d %H:%M:%S.%f");
          ColumnVector us_result = us_string_times.asTimestamp(TimeUnit.MICROSECONDS, "%Y-%m-%d %H:%M:%S.%f");
