@@ -288,7 +288,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * Returns the amount of device memory used.
    */
   public long getDeviceMemorySize() {
-    return offHeap != null ? offHeap.getDeviceMemoryLength(type, false) : 0;
+    return offHeap != null ? offHeap.getDeviceMemoryLength(type) : 0;
   }
 
   /**
@@ -491,13 +491,10 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
       offHeap.deviceData.close();
       offHeap.deviceData = null;
       MemoryListener.deviceDeallocation(amount, internalId);
-      // Just do it to make sure the cache is updated
-      offHeap.getDeviceMemoryLength(type, true);
-      // We have to free the cudf column to handle Strings properly
-      if (offHeap.cudfColumnHandle != null) {
-        offHeap.cudfColumnHandle.deleteCudfColumn();
-        offHeap.cudfColumnHandle = null;
-      }
+    }
+    if (offHeap.cudfColumnHandle != null) {
+      offHeap.cudfColumnHandle.deleteCudfColumn();
+      offHeap.cudfColumnHandle = null;
     }
   }
 
@@ -2204,12 +2201,10 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 
     /**
      * This returns total memory allocated in device for the ColumnVector.
-     * NOTE: If TypeId is STRING_CATEGORY, the size is estimated. The estimate assumes the length
-     * of strings to be 10 characters in each row and returns 24 bytes per dictionary entry.
      * @param type the data type used to determine how to calculate the data.
      * @return number of device bytes allocated for this column
      */
-    public long getDeviceMemoryLength(DType type, boolean forceUpdate) {
+    public long getDeviceMemoryLength(DType type) {
       long length = 0;
       if (deviceData != null) {
         length = deviceData.valid != null ? deviceData.valid.getLength() : 0;
