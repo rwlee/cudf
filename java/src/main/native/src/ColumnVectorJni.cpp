@@ -22,6 +22,10 @@
 #include "cudf/legacy/replace.hpp"
 #include "cudf/legacy/rolling.hpp"
 
+#include "cudf/column/column_view.hpp"
+#include "cudf/column/column.hpp"
+#include "cudf/unary.hpp"
+
 #include "jni_utils.hpp"
 
 using unique_nvcat_ptr = std::unique_ptr<NVCategory, decltype(&NVCategory::destroy)>;
@@ -707,6 +711,26 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_findAndReplaceAll(JNIEn
   CATCH_STD(env, 0);
 }
 
+JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_isNullNative(JNIEnv *env, jclass, jlong handle) {
+  JNI_NULL_CHECK(env, handle, "input column is null", 0);
+  try {
+    const cudf::column *input = reinterpret_cast<cudf::column *>(handle);
+    std::unique_ptr<cudf::column> ret = cudf::experimental::is_null(input->view());
+    return reinterpret_cast<jlong>(ret.release());
+  }
+  CATCH_STD(env, 0);
+}
+
+JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_isNotNullNative(JNIEnv *env, jclass, jlong handle) {
+  JNI_NULL_CHECK(env, handle, "input column is null", 0);
+  try {
+    const cudf::column *input = reinterpret_cast<cudf::column *>(handle);
+    std::unique_ptr<cudf::column> ret = cudf::experimental::is_valid(input->view());
+    return reinterpret_cast<jlong>(ret.release());
+  }
+  CATCH_STD(env, 0);
+}
+
 JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_unaryOperation(JNIEnv *env, jclass,
         jlong input_ptr, jint int_op) {
   JNI_NULL_CHECK(env, input_ptr, "input is null", 0);
@@ -718,6 +742,5 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_unaryOperation(JNIEnv *
   }
   CATCH_STD(env, 0);
 }
-
 
 } // extern "C"

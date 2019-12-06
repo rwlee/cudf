@@ -762,11 +762,9 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return - Boolean vector
    */
   public ColumnVector isNotNull() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    // Prediction handled by validityAsBooleanVector
-    return validityAsBooleanVector();
-*/
+    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(DType.BOOL8), "isNotNull")) {
+      return new ColumnVector(isNotNullNative(offHeap.cudfColumnHandle.nativeHandle));
+    }
   }
 
   /**
@@ -807,15 +805,9 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return - Boolean vector
    */
   public ColumnVector isNull() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    ColumnVector res = null;
-    // No prediction is possible because it is built up from other operators
-    try (ColumnVector boolValidity = validityAsBooleanVector()) {
-      res = boolValidity.not();
+    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(DType.BOOL8),"isNull")) {
+      return new ColumnVector(isNullNative(offHeap.cudfColumnHandle.nativeHandle));
     }
-    return res;
-*/
   }
 
   /**
@@ -830,65 +822,6 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
     try (DevicePrediction prediction = new DevicePrediction(getDeviceMemorySize(), "replaceNulls")) {
       return new ColumnVector(Cudf.replaceNulls(this, scalar));
     }
-*/
-  }
-
-  /*
-   * Returns the validity mask as a boolean vector with FALSE for nulls, 
-   * and TRUE otherwise.
-   */
-  private ColumnVector validityAsBooleanVector() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    if (getRowCount() == 0) {
-      return ColumnVector.fromBoxedBooleans();
-    }
-
-    ColumnVector cv = ColumnVector.fromScalar(Scalar.fromBool(true), (int)getRowCount());
-
-    if (getNullCount() == 0) {
-      // we are done, all not null
-      return cv;
-    }
-
-    ColumnVector result = null;
-
-    try {
-      // we are using the device validity bitmask, lets check
-      // we are in the device 
-      checkHasDeviceData();
-
-      // Apply the validity mask to cv's native column vector
-      // Warning: This is sharing the validity vector from the current column
-      // with the new column created with fromScalar temporarily.
-      cudfColumnViewAugmented(
-          cv.offHeap.cudfColumnHandle,
-          cv.offHeap.getDeviceData().data.address,
-          this.offHeap.getDeviceData().valid.address,
-          (int) this.getRowCount(),
-          TypeId.BOOL8.nativeId,
-          (int) getNullCount(),
-          TimeUnit.NONE.getNativeId());
-
-      // just to keep java in-sync
-      cv.nullCount = getNullCount();
-
-      // replace nulls with FALSE
-      result = cv.replaceNulls(Scalar.fromBool(false));
-    } finally {
-      // cleanup
-      if (cv != null) {
-        if (cv.offHeap.getDeviceData().data != null) {
-          long amount = cv.offHeap.getDeviceMemoryLength(cv.type, true);
-          cv.offHeap.getDeviceData().data.close(); // don't need this anymore
-          MemoryListener.deviceDeallocation(amount, cv.internalId);
-        }
-        cv.offHeap.setDeviceData(null); // .valid is managed by the current column vector, so
-                                      // don't let it get closed
-        cv.close(); // clean up other resources
-      }
-    }
-    return result;
 */
   }
 
@@ -915,12 +848,9 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * Get the value at index.
    */
   public final short getShort(long index) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert type == TypeId.INT16;
+    assert type == DType.INT16;
     assertsForGet(index);
     return offHeap.getHostData().data.getShort(index * type.sizeInBytes);
-*/
   }
 
   /**
@@ -1717,19 +1647,15 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
   /////////////////////////////////////////////////////////////////////////////
 
   static long predictSizeFor(long baseSize, long rows, boolean hasNulls) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     long total = baseSize * rows;
     if (hasNulls) {
       total += BitVectorHelper.getValidityAllocationSizeInBytes(rows);
     }
     return total;
-*/
   }
 
   long predictSizeFor(DType type) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return predictSizeFor(type.sizeInBytes, rows, hasNulls());
+    return predictSizeFor(type.sizeInBytes, rows, hasNulls());
   }
 
   private long predictSizeForRowMult(long baseSize, double rowMult) {
@@ -2160,6 +2086,10 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 //  private static native int getDeviceMemoryStringSize(long cudfColumnHandle) throws CudfException;
 
 //  private static native long concatenate(long[] columnHandles) throws CudfException;
+
+  private static native long isNullNative(long nativeHandle);
+
+  private static native long isNotNullNative(long nativeHandle);
 
   private static native long unaryOperation(long input, int op);
 

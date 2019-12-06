@@ -175,6 +175,15 @@ public class ColumnVectorTest extends CudfTestBase {
   }
 
   @Test
+  void isNullTestEmptyColumn() {
+    try (ColumnVector v = ColumnVector.fromBoxedInts();
+         ColumnVector expected = ColumnVector.fromBoxedBooleans();
+         ColumnVector result = v.isNull()) {
+      assertColumnsAreEqual(expected, result);
+    }
+  }
+
+  @Test
   void testGetDeviceMemorySizeNonStrings() {
     try (ColumnVector v0 = ColumnVector.fromBoxedInts(1, 2, 3, 4, 5, 6);
          ColumnVector v1 = ColumnVector.fromBoxedInts(1, 2, 3, null, null, 4, 5, 6)) {
