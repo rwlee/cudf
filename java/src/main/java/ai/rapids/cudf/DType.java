@@ -17,6 +17,8 @@
  */
 package ai.rapids.cudf;
 
+import java.util.EnumSet;
+
 public enum DType {
   EMPTY(0, 0),
   INT8(1, 1),
@@ -61,6 +63,17 @@ public enum DType {
     this.nativeId = nativeId;
   }
 
+  public boolean isTimestamp() {
+    return TIMESTAMPS.contains(this);
+  }
+
+  /**
+   * Returns true for timestamps with time level resolution, as opposed to day level resolution
+   */
+  public boolean hasTimeResolution() {
+    return TIME_RESOLUTION.contains(this);
+  }
+
   static DType fromNative(int nativeId) {
     for (DType type : TYPE_IDS) {
       if (type.nativeId == nativeId) {
@@ -69,4 +82,17 @@ public enum DType {
     }
     throw new IllegalArgumentException("Could not translate " + nativeId + " into a DType");
   }
+
+  private static final EnumSet<DType> TIMESTAMPS = EnumSet.of(
+      DType.TIMESTAMP_DAYS,
+      DType.TIMESTAMP_SECONDS,
+      DType.TIMESTAMP_MILLISECONDS,
+      DType.TIMESTAMP_MICROSECONDS,
+      DType.TIMESTAMP_NANOSECONDS);
+
+  private static final EnumSet<DType> TIME_RESOLUTION = EnumSet.of(
+      DType.TIMESTAMP_SECONDS,
+      DType.TIMESTAMP_MILLISECONDS,
+      DType.TIMESTAMP_MICROSECONDS,
+      DType.TIMESTAMP_NANOSECONDS);
 }

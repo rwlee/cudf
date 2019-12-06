@@ -25,8 +25,12 @@ class CudfColumn {
     this.nativeHandle = nativeHandle;
   }
 
-  public CudfColumn(DType DType, int rows, MaskState maskState) {
-      this.nativeHandle = makeNumericCudfColumn(DType.nativeId, rows, maskState.nativeId);
+  public CudfColumn(DType dtype, int rows, MaskState maskState) {
+    if (dtype.isTimestamp()) {
+      this.nativeHandle = makeTimestampCudfColumn(dtype.nativeId, rows, maskState.nativeId);
+    } else {
+      this.nativeHandle = makeNumericCudfColumn(dtype.nativeId, rows, maskState.nativeId);
+    }
   }
 
   public CudfColumn(long charData, long offsetData, long validData, int nullCount, int rows) {
@@ -73,6 +77,8 @@ class CudfColumn {
   private native long getNativeValidPointer(long cudfColumnHandle) throws CudfException;
 
   private native long makeNumericCudfColumn(int type, int rows, int maskState);
+
+  private native long makeTimestampCudfColumn(int type, int rows, int maskState);
 
   static native long getNativeValidPointerSize(int size);
 

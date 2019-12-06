@@ -139,44 +139,6 @@ class Cudf {
 
   private static native Scalar reduce(long v, int op, int dtype);
 
-  /* datetime extract*/
-
-  static long gdfExtractDatetimeYear(ColumnVector input) {
-    return gdfExtractDatetimeYear(input.getNativeCudfColumnAddress());
-  }
-
-  private static native long gdfExtractDatetimeYear(long input) throws CudfException;
-
-  static long gdfExtractDatetimeMonth(ColumnVector input) {
-    return gdfExtractDatetimeMonth(input.getNativeCudfColumnAddress());
-  }
-
-  private static native long gdfExtractDatetimeMonth(long input) throws CudfException;
-
-  static long gdfExtractDatetimeDay(ColumnVector input) {
-    return gdfExtractDatetimeDay(input.getNativeCudfColumnAddress());
-  }
-
-  private static native long gdfExtractDatetimeDay(long input) throws CudfException;
-
-  static long gdfExtractDatetimeHour(ColumnVector input) {
-    return gdfExtractDatetimeHour(input.getNativeCudfColumnAddress());
-  }
-
-  private static native long gdfExtractDatetimeHour(long input) throws CudfException;
-
-  static long gdfExtractDatetimeMinute(ColumnVector input) {
-    return gdfExtractDatetimeMinute(input.getNativeCudfColumnAddress());
-  }
-
-  private static native long gdfExtractDatetimeMinute(long input) throws CudfException;
-
-  static long gdfExtractDatetimeSecond(ColumnVector input) {
-    return gdfExtractDatetimeSecond(input.getNativeCudfColumnAddress());
-  }
-
-  private static native long gdfExtractDatetimeSecond(long input) throws CudfException;
-
   static long gdfCast(ColumnVector input, DType outType, TimeUnit outUnit) {
     return gdfCast(input.getNativeCudfColumnAddress(), outType.nativeId, outUnit.getNativeId());
   }

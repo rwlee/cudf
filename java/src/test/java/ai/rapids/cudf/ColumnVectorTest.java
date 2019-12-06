@@ -783,10 +783,10 @@ public class ColumnVectorTest extends CudfTestBase {
 
   @Test
   void testFindAndReplaceAllTimeUnits() {
-    try(ColumnVector vector = ColumnVector.timestampsFromLongs(TimeUnit.MICROSECONDS, 1l, 1l, 2l, 8l);
-        ColumnVector oldValues = ColumnVector.timestampsFromLongs(TimeUnit.MICROSECONDS, 1l, 2l, 7l); // 7 dosn't exist, nothing to replace
-        ColumnVector replacedValues = ColumnVector.timestampsFromLongs(TimeUnit.MICROSECONDS, 9l, 4l, 0l);
-        ColumnVector expectedVector = ColumnVector.timestampsFromLongs(TimeUnit.MICROSECONDS, 9l, 9l, 4l, 8l);
+    try(ColumnVector vector = ColumnVector.timestampMicroSecondsFromLongs(1l, 1l, 2l, 8l);
+        ColumnVector oldValues = ColumnVector.timestampMicroSecondsFromLongs(1l, 2l, 7l); // 7 dosn't exist, nothing to replace
+        ColumnVector replacedValues = ColumnVector.timestampMicroSecondsFromLongs(9l, 4l, 0l);
+        ColumnVector expectedVector = ColumnVector.timestampMicroSecondsFromLongs(9l, 9l, 4l, 8l);
         ColumnVector newVector = vector.findAndReplaceAll(oldValues, replacedValues)) {
       assertColumnsAreEqual(expectedVector, newVector);
     }
