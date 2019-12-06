@@ -321,11 +321,11 @@ public class TimestampColumnVectorTest extends CudfTestBase {
   }
 
   @Test
-  public void testCategoryTimestampToLongSecond() {
-    try (ColumnVector s_string_times = ColumnVector.categoryFromStrings(TIMES_S_STRING);
-         ColumnVector ms_string_times = ColumnVector.categoryFromStrings(TIMES_MS_STRING);
-         ColumnVector us_string_times = ColumnVector.categoryFromStrings(TIMES_US_STRING);
-         ColumnVector ns_string_times = ColumnVector.categoryFromStrings(TIMES_NS_STRING);
+  public void testStringTimestampToLongSecond() {
+    try (ColumnVector s_string_times = ColumnVector.fromStrings(TIMES_S_STRING);
+         ColumnVector ms_string_times = ColumnVector.fromStrings(TIMES_MS_STRING);
+         ColumnVector us_string_times = ColumnVector.fromStrings(TIMES_US_STRING);
+         ColumnVector ns_string_times = ColumnVector.fromStrings(TIMES_NS_STRING);
          ColumnVector s_expected = ColumnVector.timestampSecondsFromLongs(TIMES_S);
          ColumnVector s_result = s_string_times.asTimestamp(TimeUnit.SECONDS, "%Y-%m-%d %H:%M:%S");
          ColumnVector ms_result = ms_string_times.asTimestamp(TimeUnit.SECONDS, "%Y-%m-%d %H:%M:%S.%f");
@@ -339,10 +339,10 @@ public class TimestampColumnVectorTest extends CudfTestBase {
   }
 
   @Test
-  public void testCategoryTimestampToSubsecond() {
-    try (ColumnVector ms_string_times = ColumnVector.categoryFromStrings(TIMES_MS_STRING);
-         ColumnVector us_string_times = ColumnVector.categoryFromStrings(TIMES_US_STRING);
-         ColumnVector ns_string_times = ColumnVector.categoryFromStrings(TIMES_NS_STRING);
+  public void testStringTimestampToSubsecond() {
+    try (ColumnVector ms_string_times = ColumnVector.fromStrings(TIMES_MS_STRING);
+         ColumnVector us_string_times = ColumnVector.fromStrings(TIMES_US_STRING);
+         ColumnVector ns_string_times = ColumnVector.fromStrings(TIMES_NS_STRING);
          ColumnVector ms_expected = ColumnVector.timestampMilliSecondsFromLongs(TIMES_MS);
          ColumnVector us_expected = ColumnVector.timestampMicroSecondsFromLongs(TIMES_US);
          ColumnVector ns_expected = ColumnVector.timestampNanoSecondsFromLongs(TIMES_NS);

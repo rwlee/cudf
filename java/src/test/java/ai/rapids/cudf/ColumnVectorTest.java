@@ -107,10 +107,10 @@ public class ColumnVectorTest extends CudfTestBase {
   }
 
   @Test
-  void testConcaCategories() {
-    try (ColumnVector v0 = ColumnVector.categoryFromStrings("0","1","2",null);
-         ColumnVector v1 = ColumnVector.categoryFromStrings(null, "5", "6","7");
-         ColumnVector expected = ColumnVector.categoryFromStrings(
+  void testConcatStrings() {
+    try (ColumnVector v0 = ColumnVector.fromStrings("0","1","2",null);
+         ColumnVector v1 = ColumnVector.fromStrings(null, "5", "6","7");
+         ColumnVector expected = ColumnVector.fromStrings(
            "0","1","2",null,
            null,"5","6","7");
          ColumnVector v = ColumnVector.concatenate(v0, v1)) {
@@ -572,16 +572,6 @@ public class ColumnVectorTest extends CudfTestBase {
   }
 
   @Test
-  void testStringCatHash() {
-    try (ColumnVector cv = ColumnVector.categoryFromStrings("1", "12", "123", null, "1234", "1", "12", "123", "1234");
-         ColumnVector hash = cv.hash();
-         // The exact values don't matter too much, because it is not a specific hash algorithm we are using.
-         ColumnVector expected = ColumnVector.fromBoxedInts(-891545012, -1810825095, 766007851, null, 1762063109, -891545012, -1810825095, 766007851, 1762063109)) {
-      assertColumnsAreEqual(expected, hash);
-    }
-  }
-
-  @Test
   void testLongHash() {
     try (ColumnVector cv = ColumnVector.fromBoxedLongs(1L, 12L, 123L, null, 1234L)) {
       try (ColumnVector hash = cv.hash();
@@ -630,6 +620,12 @@ public class ColumnVectorTest extends CudfTestBase {
         assertEquals(0, len.getRowCount());
       }
 
+      try (ColumnVector mask = ColumnVector.fromBoxedBooleans();
+           Table input = new Table(cv);
+           Table filtered = input.filter(mask)) {
+        assertEquals(0, filtered.getColumn(0).getRowCount());
+      }
+
       try (ColumnVector len = cv.getByteCount()) {
         assertEquals(0, len.getRowCount());
       }
@@ -642,28 +638,6 @@ public class ColumnVectorTest extends CudfTestBase {
            ColumnVector upper = cv.upper()) {
         assertColumnsAreEqual(cv, lower);
         assertColumnsAreEqual(cv, upper);
-      }
-    }
-  }
-
-  @Test
-  void testEmptyStringCatColumnOpts() {
-    try (ColumnVector cv = ColumnVector.categoryFromStrings()) {
-      try (ColumnVector empty = cv.asStrings()) {
-        assertEquals(0, empty.getRowCount());
-      }
-
-      Scalar index = cv.getCategoryIndex(Scalar.fromString("TEST"));
-      assertEquals(-1, index.getInt());
-
-      try (ColumnVector mask = ColumnVector.fromBoxedBooleans();
-           Table input = new Table(cv);
-           Table filtered = input.filter(mask)) {
-        assertEquals(0, filtered.getColumn(0).getRowCount());
-      }
-
-      try (ColumnVector hash = cv.hash()) {
-        assertEquals(0, hash.getRowCount());
       }
     }
   }

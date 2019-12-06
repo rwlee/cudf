@@ -406,10 +406,10 @@ public class BinaryOpTest extends CudfTestBase {
   }
 
   @Test
-  public void testStringCategoryEqualScalar() {
-    try (ColumnVector a = ColumnVector.categoryFromStrings("a", "b", "c", "d");
-         ColumnVector b = ColumnVector.categoryFromStrings("a", "b", "b", "a");
-         ColumnVector c = ColumnVector.categoryFromStrings("a", null, "b", null)) {
+  public void testStringEqualScalar() {
+    try (ColumnVector a = ColumnVector.fromStrings("a", "b", "c", "d");
+         ColumnVector b = ColumnVector.fromStrings("a", "b", "b", "a");
+         ColumnVector c = ColumnVector.fromStrings("a", null, "b", null)) {
       Scalar s = Scalar.fromString("b");
 
       try (ColumnVector answer = a.equalTo(s);
@@ -430,9 +430,9 @@ public class BinaryOpTest extends CudfTestBase {
   }
 
   @Test
-  public void testStringCategoryEqualScalarNotPresent() {
-    try (ColumnVector a = ColumnVector.categoryFromStrings("a", "b", "c", "d");
-         ColumnVector b = ColumnVector.categoryFromStrings("a", null, "b", null)) {
+  public void testStringEqualScalarNotPresent() {
+    try (ColumnVector a = ColumnVector.fromStrings("a", "b", "c", "d");
+         ColumnVector b = ColumnVector.fromStrings("a", null, "b", null)) {
       Scalar s = Scalar.fromString("boo");
 
       try (ColumnVector answer = a.equalTo(s);
@@ -472,10 +472,10 @@ public class BinaryOpTest extends CudfTestBase {
   }
 
   @Test
-  public void testStringCategoryNotEqualScalar() {
-    try (ColumnVector a = ColumnVector.categoryFromStrings("a", "b", "c", "d");
-         ColumnVector b = ColumnVector.categoryFromStrings("a", "b", "b", "a");
-         ColumnVector c = ColumnVector.categoryFromStrings("a", null, "b", null)) {
+  public void testStringNotEqualScalar() {
+    try (ColumnVector a = ColumnVector.fromStrings("a", "b", "c", "d");
+         ColumnVector b = ColumnVector.fromStrings("a", "b", "b", "a");
+         ColumnVector c = ColumnVector.fromStrings("a", null, "b", null)) {
       Scalar s = Scalar.fromString("b");
 
       try (ColumnVector answer = a.notEqualTo(s);
@@ -496,9 +496,9 @@ public class BinaryOpTest extends CudfTestBase {
   }
 
   @Test
-  public void testStringCategoryNotEqualScalarNotPresent() {
-    try (ColumnVector a = ColumnVector.categoryFromStrings("a", "b", "c", "d");
-         ColumnVector b = ColumnVector.categoryFromStrings("a", null, "b", null)) {
+  public void testStringNotEqualScalarNotPresent() {
+    try (ColumnVector a = ColumnVector.fromStrings("a", "b", "c", "d");
+         ColumnVector b = ColumnVector.fromStrings("a", null, "b", null)) {
       Scalar s = Scalar.fromString("abc");
 
       try (ColumnVector answer = a.notEqualTo(s);
@@ -538,10 +538,10 @@ public class BinaryOpTest extends CudfTestBase {
   }
 
   @Test
-  public void testStringCategoryLessThanScalar() {
-    try (ColumnVector a = ColumnVector.categoryFromStrings("a", "b", "c", "d");
-         ColumnVector b = ColumnVector.categoryFromStrings("a", "b", "b", "a");
-         ColumnVector c = ColumnVector.categoryFromStrings("a", null, "b", null)) {
+  public void testStringLessThanScalar() {
+    try (ColumnVector a = ColumnVector.fromStrings("a", "b", "c", "d");
+         ColumnVector b = ColumnVector.fromStrings("a", "b", "b", "a");
+         ColumnVector c = ColumnVector.fromStrings("a", null, "b", null)) {
       Scalar s = Scalar.fromString("b");
 
       try (ColumnVector answer = a.lessThan(s);
@@ -563,10 +563,10 @@ public class BinaryOpTest extends CudfTestBase {
 
 
   @Test
-  public void testStringCategoryLessThanScalarNotPresent() {
-    try (ColumnVector a = ColumnVector.categoryFromStrings("a", "b", "c", "d");
-         ColumnVector b = ColumnVector.categoryFromStrings("a", "b", "b", "a");
-         ColumnVector c = ColumnVector.categoryFromStrings("a", null, "b", null)) {
+  public void testStringLessThanScalarNotPresent() {
+    try (ColumnVector a = ColumnVector.fromStrings("a", "b", "c", "d");
+         ColumnVector b = ColumnVector.fromStrings("a", "b", "b", "a");
+         ColumnVector c = ColumnVector.fromStrings("a", null, "b", null)) {
       Scalar s = Scalar.fromString("abc");
 
       try (ColumnVector answer = a.lessThan(s);
@@ -611,10 +611,10 @@ public class BinaryOpTest extends CudfTestBase {
   }
 
   @Test
-  public void testStringCategoryGreaterThanScalar() {
-    try (ColumnVector a = ColumnVector.categoryFromStrings("a", "b", "c", "d");
-         ColumnVector b = ColumnVector.categoryFromStrings("a", "b", "b", "a");
-         ColumnVector c = ColumnVector.categoryFromStrings("a", null, "b", null)) {
+  public void testStringGreaterThanScalar() {
+    try (ColumnVector a = ColumnVector.fromStrings("a", "b", "c", "d");
+         ColumnVector b = ColumnVector.fromStrings("a", "b", "b", "a");
+         ColumnVector c = ColumnVector.fromStrings("a", null, "b", null)) {
       Scalar s = Scalar.fromString("b");
 
       try (ColumnVector answer = a.greaterThan(s);
@@ -635,10 +635,10 @@ public class BinaryOpTest extends CudfTestBase {
   }
 
   @Test
-  public void testStringCategoryGreaterThanScalarNotPresent() {
-    try (ColumnVector a = ColumnVector.categoryFromStrings("a", "b", "c", "d");
-         ColumnVector b = ColumnVector.categoryFromStrings("a", "b", "b", "a");
-         ColumnVector c = ColumnVector.categoryFromStrings("a", null, "b", null)) {
+  public void testStringGreaterThanScalarNotPresent() {
+    try (ColumnVector a = ColumnVector.fromStrings("a", "b", "c", "d");
+         ColumnVector b = ColumnVector.fromStrings("a", "b", "b", "a");
+         ColumnVector c = ColumnVector.fromStrings("a", null, "b", null)) {
       Scalar s = Scalar.fromString("boo");
 
       try (ColumnVector answer = a.greaterThan(s);
@@ -683,10 +683,10 @@ public class BinaryOpTest extends CudfTestBase {
   }
 
   @Test
-  public void testStringCategoryLessOrEqualToScalar() {
-    try (ColumnVector a = ColumnVector.categoryFromStrings("a", "b", "c", "d");
-         ColumnVector b = ColumnVector.categoryFromStrings("a", "b", "b", "a");
-         ColumnVector c = ColumnVector.categoryFromStrings("a", null, "b", null)) {
+  public void testStringLessOrEqualToScalar() {
+    try (ColumnVector a = ColumnVector.fromStrings("a", "b", "c", "d");
+         ColumnVector b = ColumnVector.fromStrings("a", "b", "b", "a");
+         ColumnVector c = ColumnVector.fromStrings("a", null, "b", null)) {
       Scalar s = Scalar.fromString("b");
 
       try (ColumnVector answer = a.lessOrEqualTo(s);
@@ -707,10 +707,10 @@ public class BinaryOpTest extends CudfTestBase {
   }
 
   @Test
-  public void testStringCategoryLessOrEqualToScalarNotPresent() {
-    try (ColumnVector a = ColumnVector.categoryFromStrings("a", "b", "c", "d");
-         ColumnVector b = ColumnVector.categoryFromStrings("a", "b", "b", "a");
-         ColumnVector c = ColumnVector.categoryFromStrings("a", null, "b", null)) {
+  public void testStringLessOrEqualToScalarNotPresent() {
+    try (ColumnVector a = ColumnVector.fromStrings("a", "b", "c", "d");
+         ColumnVector b = ColumnVector.fromStrings("a", "b", "b", "a");
+         ColumnVector c = ColumnVector.fromStrings("a", null, "b", null)) {
       Scalar s = Scalar.fromString("boo");
 
       try (ColumnVector answer = a.lessOrEqualTo(s);
@@ -755,10 +755,10 @@ public class BinaryOpTest extends CudfTestBase {
   }
 
   @Test
-  public void testStringCategoryGreaterOrEqualToScalar() {
-    try (ColumnVector a = ColumnVector.categoryFromStrings("a", "b", "c", "d");
-         ColumnVector b = ColumnVector.categoryFromStrings("a", "b", "b", "a");
-         ColumnVector c = ColumnVector.categoryFromStrings("a", null, "b", null)) {
+  public void testStringGreaterOrEqualToScalar() {
+    try (ColumnVector a = ColumnVector.fromStrings("a", "b", "c", "d");
+         ColumnVector b = ColumnVector.fromStrings("a", "b", "b", "a");
+         ColumnVector c = ColumnVector.fromStrings("a", null, "b", null)) {
       Scalar s = Scalar.fromString("b");
 
       try (ColumnVector answer = a.greaterOrEqualTo(s);
@@ -779,10 +779,10 @@ public class BinaryOpTest extends CudfTestBase {
   }
 
   @Test
-  public void testStringCategoryGreaterOrEqualToScalarNotPresent() {
-    try (ColumnVector a = ColumnVector.categoryFromStrings("a", "b", "c", "d");
-         ColumnVector b = ColumnVector.categoryFromStrings("a", "b", "b", "a");
-         ColumnVector c = ColumnVector.categoryFromStrings("a", null, "b", null)) {
+  public void testStringGreaterOrEqualToScalarNotPresent() {
+    try (ColumnVector a = ColumnVector.fromStrings("a", "b", "c", "d");
+         ColumnVector b = ColumnVector.fromStrings("a", "b", "b", "a");
+         ColumnVector c = ColumnVector.fromStrings("a", null, "b", null)) {
       Scalar s = Scalar.fromString("abc");
 
       try (ColumnVector answer = a.greaterOrEqualTo(s);

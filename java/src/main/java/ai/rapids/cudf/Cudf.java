@@ -139,15 +139,4 @@ class Cudf {
 
   private static native Scalar reduce(long v, int op, int dtype);
 
-  static int getCategoryIndex(ColumnVector category, Scalar str) {
-    return getCategoryIndex(category.getNativeCudfColumnAddress(), str.stringTypeStorage);
-  }
-
-  private static native int getCategoryIndex(long cat, byte[] str);
-
-  static int[] getCategoryBounds(ColumnVector category, Scalar str) {
-    return getCategoryBounds(category.getNativeCudfColumnAddress(), str.stringTypeStorage);
-  }
-
-  private static native int[] getCategoryBounds(long cat, byte[] str);
 }
