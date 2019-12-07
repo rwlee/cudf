@@ -16,17 +16,14 @@
 
 #include <cudf/column/column.hpp>
 #include <cudf/column/column_view.hpp>
-#include <cudf/unary.hpp>
 #include <cudf/datetime.hpp>
+#include <cudf/replace.hpp>
+#include <cudf/unary.hpp>
 
 #include "cudf/legacy/copying.hpp"
 #include "cudf/legacy/quantiles.hpp"
 #include "cudf/legacy/replace.hpp"
 #include "cudf/legacy/rolling.hpp"
-
-#include "cudf/column/column_view.hpp"
-#include "cudf/column/column.hpp"
-#include "cudf/unary.hpp"
 
 #include "jni_utils.hpp"
 
@@ -450,6 +447,19 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_concatenate(JNIEnv *env
   CATCH_STD(env, 0);
 }
 
+JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_replaceNulls(JNIEnv *env, jclass,
+    jlong j_col, jlong j_scalar) {
+  JNI_NULL_CHECK(env, j_col, "column is null", 0);
+  JNI_NULL_CHECK(env, j_scalar, "scalar is null", 0);
+  try {
+    auto col = reinterpret_cast<cudf::column*>(j_col);
+    auto val = reinterpret_cast<cudf::scalar*>(j_scalar);
+    std::unique_ptr<cudf::column> result = cudf::experimental::replace_nulls(*col, *val);
+    return reinterpret_cast<jlong>(result.release());
+  }
+  CATCH_STD(env, 0);
+}
+
 JNIEXPORT jobject JNICALL Java_ai_rapids_cudf_ColumnVector_exactQuantile(JNIEnv *env, jclass clazz,
                                                                          jlong input_column,
                                                                          jint quantile_method,
@@ -462,7 +472,8 @@ JNIEXPORT jobject JNICALL Java_ai_rapids_cudf_ColumnVector_exactQuantile(JNIEnv 
     gdf_scalar result{};
     JNI_GDF_TRY(env, NULL,
                 cudf::quantile_exact(n_input_column, n_quantile_method, quantile, &result, &ctxt));
-    return cudf::jni::jscalar_from_scalar(env, result, n_input_column->dtype_info.time_unit);
+    //return cudf::jni::jscalar_from_scalar(env, result, n_input_column->dtype_info.time_unit);
+    throw std::logic_error("BAD IMPLEMENTATION");
   }
   CATCH_STD(env, NULL);
 }
@@ -476,7 +487,8 @@ JNIEXPORT jobject JNICALL Java_ai_rapids_cudf_ColumnVector_approxQuantile(JNIEnv
     gdf_context ctxt{0, GDF_SORT, 0, 0};
     gdf_scalar result{};
     JNI_GDF_TRY(env, NULL, cudf::quantile_approx(n_input_column, quantile, &result, &ctxt));
-    return cudf::jni::jscalar_from_scalar(env, result, n_input_column->dtype_info.time_unit);
+    //return cudf::jni::jscalar_from_scalar(env, result, n_input_column->dtype_info.time_unit);
+    throw std::logic_error("BAD IMPLEMENTATION");
   }
   CATCH_STD(env, NULL);
 }

@@ -203,6 +203,7 @@ set(SOURCE_FILES
     "src/ColumnVectorJni.cpp"
     "src/NvtxRangeJni.cpp"
     "src/RmmJni.cpp"
+    "src/ScalarJni.cpp"
     "src/TableJni.cpp"
     "src/CudfColumnVectorJni.cpp"
     "src/helper.cu")

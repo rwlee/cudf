@@ -96,38 +96,9 @@ class Cudf {
                                            int op, int dtype);
 
 
-  /**
-   * Replaces nulls on the input ColumnVector with the value of Scalar.
-   *
-   * The types of the input ColumnVector and Scalar must match, else an error is
-   * thrown.
-   *
-   * If the Scalar is null, this function will throw an error, as replacements
-   * must be valid in cudf::replace_nulls.
-   *
-   * @param input - ColumnVector input
-   * @param replacement - Scalar to replace nulls with
-   * @return - Native address of cudf.ColumnVector result
-   */
-  static long replaceNulls(ColumnVector input, Scalar replacement) {
-    return replaceNulls(input.getNativeCudfColumnAddress(),
-        replacement.intTypeStorage,
-        replacement.floatTypeStorage,
-        replacement.doubleTypeStorage,
-        replacement.isValid,
-        replacement.type.nativeId);
-  }
-
-  private static native long replaceNulls(long input, long rIntValues, float rFValue,
-                                          double rDValue, boolean rIsValid, int rDtype);
-
   static void fill(ColumnVector input, Scalar value) {
-    fill(input.getNativeCudfColumnAddress(),
-        value.intTypeStorage,
-        value.floatTypeStorage,
-        value.doubleTypeStorage,
-        value.isValid,
-        value.type.nativeId);
+    //fill(input.getNativeCudfColumnAddress(), value.getScalarHandle());
+    throw new UnsupportedOperationException("NOT PORTED YET");
   }
 
   private static native void fill(long input, long sIntValues, float sFValue,
@@ -138,16 +109,4 @@ class Cudf {
   }
 
   private static native Scalar reduce(long v, int op, int dtype);
-
-  static int getCategoryIndex(ColumnVector category, Scalar str) {
-    return getCategoryIndex(category.getNativeCudfColumnAddress(), str.stringTypeStorage);
-  }
-
-  private static native int getCategoryIndex(long cat, byte[] str);
-
-  static int[] getCategoryBounds(ColumnVector category, Scalar str) {
-    return getCategoryBounds(category.getNativeCudfColumnAddress(), str.stringTypeStorage);
-  }
-
-  private static native int[] getCategoryBounds(long cat, byte[] str);
 }

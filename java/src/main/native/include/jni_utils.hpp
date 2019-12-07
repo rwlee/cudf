@@ -24,6 +24,8 @@
 #include <nvstrings/NVStrings.h>
 #include <rmm/rmm.h>
 
+#include <cudf/scalar/scalar.hpp>
+
 #include "cudf/cudf.h"
 #include "cudf/legacy/table.hpp"
 #include "utilities/legacy/column_utils.hpp"
@@ -33,7 +35,9 @@
 namespace cudf {
 namespace jni {
 
-jobject jscalar_from_scalar(JNIEnv *env, const gdf_scalar &scalar, gdf_time_unit time_unit);
+bool cache_scalar_jni(JNIEnv* env);
+void release_scalar_jni(JNIEnv* env);
+jobject jscalar_from_scalar(JNIEnv *env, cudf::scalar const& scalar);
 
 /**
  * @brief indicates that a JNI error of some kind was thrown and the main
@@ -76,7 +80,7 @@ public:
 
   jlongArray newArray(JNIEnv *const env, int len) const { return env->NewLongArray(len); }
 
-  void setArrayRegion(JNIEnv *const env, jlongArray jarr, int start, int len, jlong *arr) const {
+  void setArrayRegion(JNIEnv *const env, jlongArray jarr, int start, int len, jlong const* arr) const {
     env->SetLongArrayRegion(jarr, start, len, arr);
   }
 
@@ -93,12 +97,29 @@ public:
 
   jintArray newArray(JNIEnv *const env, int len) const { return env->NewIntArray(len); }
 
-  void setArrayRegion(JNIEnv *const env, jintArray jarr, int start, int len, jint *arr) const {
+  void setArrayRegion(JNIEnv *const env, jintArray jarr, int start, int len, jint const* arr) const {
     env->SetIntArrayRegion(jarr, start, len, arr);
   }
 
   void releaseArrayElements(JNIEnv *const env, jintArray jarr, jint *arr, jint mode) const {
     env->ReleaseIntArrayElements(jarr, arr, mode);
+  }
+};
+
+class native_jbyteArray_accessor {
+public:
+  jbyte *getArrayElements(JNIEnv *const env, jbyteArray arr) const {
+    return env->GetByteArrayElements(arr, NULL);
+  }
+
+  jbyteArray newArray(JNIEnv *const env, int len) const { return env->NewByteArray(len); }
+
+  void setArrayRegion(JNIEnv *const env, jbyteArray jarr, int start, int len, jbyte const* arr) const {
+    env->SetByteArrayRegion(jarr, start, len, arr);
+  }
+
+  void releaseArrayElements(JNIEnv *const env, jbyteArray jarr, jbyte *arr, jint mode) const {
+    env->ReleaseByteArrayElements(jarr, arr, mode);
   }
 };
 
@@ -111,7 +132,7 @@ public:
   jbooleanArray newArray(JNIEnv *const env, int len) const { return env->NewBooleanArray(len); }
 
   void setArrayRegion(JNIEnv *const env, jbooleanArray jarr, int start, int len,
-                      jboolean *arr) const {
+                      jboolean const* arr) const {
     env->SetBooleanArrayRegion(jarr, start, len, arr);
   }
 
@@ -158,7 +179,7 @@ public:
     check_java_exception(env);
   }
 
-  native_jArray(JNIEnv *const env, N_TYPE *arr, int len)
+  native_jArray(JNIEnv *const env, N_TYPE const* arr, int len)
       : env(env), orig(access.newArray(env, len)), len(len), data_ptr(NULL) {
     check_java_exception(env);
     access.setArrayRegion(env, orig, 0, len, arr);
@@ -233,6 +254,7 @@ public:
 
 typedef native_jArray<jlong, jlongArray, native_jlongArray_accessor> native_jlongArray;
 typedef native_jArray<jint, jintArray, native_jintArray_accessor> native_jintArray;
+typedef native_jArray<jbyte, jbyteArray, native_jbyteArray_accessor> native_jbyteArray;
 typedef native_jArray<jboolean, jbooleanArray, native_jbooleanArray_accessor> native_jbooleanArray;
 
 /**
