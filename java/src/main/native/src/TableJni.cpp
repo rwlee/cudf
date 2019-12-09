@@ -19,6 +19,9 @@
 
 #include <unordered_set>
 
+#include <cudf/table/table.hpp>
+#include <cudf/io/functions.hpp>
+
 #include "cudf/utilities/legacy/nvcategory_util.hpp"
 #include "cudf/legacy/copying.hpp"
 #include "cudf/legacy/groupby.hpp"
@@ -54,6 +57,20 @@ static jni_rmm_unique_ptr<int8_t> copy_to_device(JNIEnv *env, const native_jbool
   auto device = jni_rmm_alloc<int8_t>(env, byte_len);
   jni_cuda_check(env, cudaMemcpy(device.get(), host.get(), byte_len, cudaMemcpyHostToDevice));
   return device;
+}
+
+/**
+ * Take a table returned by some operation and turn it into an array of column* so we can track them ourselves
+ * in java instead of having their life tied to the table.
+ */
+static jlongArray convert_table_for_return(JNIEnv * env, std::unique_ptr<cudf::experimental::table> &table_result) {
+    std::vector<std::unique_ptr<cudf::column>> ret = table_result->release();
+    int num_columns = ret.size();
+    cudf::jni::native_jlongArray outcol_handles(env, num_columns);
+    for (int i = 0; i < num_columns; i++) {
+      outcol_handles[i] = reinterpret_cast<jlong>(ret[i].release());
+    }
+    return outcol_handles.get_jArray();
 }
 
 } // namespace jni
@@ -252,14 +269,14 @@ JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_Table_gdfReadParquet(
 
     cudf::jni::native_jstringArray n_filter_col_names(env, filter_col_names);
 
-    std::unique_ptr<cudf::source_info> source;
+    std::unique_ptr<cudf::experimental::io::source_info> source;
     if (read_buffer) {
-      source.reset(new cudf::source_info(reinterpret_cast<char *>(buffer), buffer_length));
+      source.reset(new cudf::experimental::io::source_info(reinterpret_cast<char *>(buffer), buffer_length));
     } else {
-      source.reset(new cudf::source_info(filename.get()));
+      source.reset(new cudf::experimental::io::source_info(filename.get()));
     }
 
-    cudf::parquet_read_arg read_arg{*source};
+    cudf::experimental::io::read_parquet_args read_arg(*source);
 
     read_arg.columns = n_filter_col_names.as_cpp_vector();
 
@@ -267,13 +284,10 @@ JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_Table_gdfReadParquet(
     read_arg.skip_rows = -1;
     read_arg.num_rows = -1;
     read_arg.strings_to_categorical = false;
-    read_arg.timestamp_unit = static_cast<gdf_time_unit>(unit);
+    read_arg.timestamp_type = cudf::data_type(static_cast<cudf::type_id>(unit));
 
-    cudf::table result = read_parquet(read_arg);
-    cudf::jni::native_jlongArray native_handles(env, reinterpret_cast<jlong *>(result.begin()),
-                                                result.num_columns());
-
-    return native_handles.get_jArray();
+    std::unique_ptr<cudf::experimental::table> result = cudf::experimental::io::read_parquet(read_arg);
+    return cudf::jni::convert_table_for_return(env, result);
   }
   CATCH_STD(env, NULL);
 }
