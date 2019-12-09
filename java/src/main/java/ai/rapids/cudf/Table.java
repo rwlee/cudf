@@ -70,27 +70,24 @@ public final class Table implements AutoCloseable {
   }
 
   private Table(long[] cudfColumns) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     assert cudfColumns != null : "CudfColumns can't be null";
     this.columns = new ColumnVector[cudfColumns.length];
     try {
       for (int i = 0; i < cudfColumns.length; i++) {
         this.columns[i] = new ColumnVector(cudfColumns[i]);
       }
-      nativeHandle = createCudfTable(cudfColumns);
+      nativeHandle = createCudfTableView(cudfColumns);
       this.rows = columns[0].getRowCount();
     } catch (Throwable t) {
       for (int i = 0; i < cudfColumns.length; i++) {
         if (this.columns[i] != null) {
           this.columns[i].close();
         } else {
-          ColumnVector.freeCudfColumn(cudfColumns[i], true);
+          new CudfColumn(cudfColumns[i]).deleteCudfColumn();
         }
       }
       throw t;
     }
-*/
   }
 
   /**
@@ -98,8 +95,7 @@ public final class Table implements AutoCloseable {
    * never be modified in anyway.
    */
   ColumnVector[] getColumns() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return columns;
+    return columns;
   }
 
   /**
@@ -108,21 +104,16 @@ public final class Table implements AutoCloseable {
    * count on the column yourself.
    */
   public ColumnVector getColumn(int index) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     assert index < columns.length;
     return columns[index];
-*/
   }
 
   public final long getRowCount() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return rows;
+    return rows;
   }
 
   public final int getNumberOfColumns() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return columns.length;
+    return columns.length;
   }
 
   @Override
@@ -645,8 +636,7 @@ public final class Table implements AutoCloseable {
    * @return the file parsed as a table on the GPU.
    */
   public static Table readParquet(File path) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return readParquet(ParquetOptions.DEFAULT, path);
+    return readParquet(ParquetOptions.DEFAULT, path);
   }
 
   /**
@@ -656,14 +646,11 @@ public final class Table implements AutoCloseable {
    * @return the file parsed as a table on the GPU.
    */
   public static Table readParquet(ParquetOptions opts, File path) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     long amount = opts.getSizeGuessOrElse(() -> path.length() * COMPRESSION_RATIO_ESTIMATE);
     try (DevicePrediction prediction = new DevicePrediction(amount, "PARQUET FILE")) {
       return new Table(gdfReadParquet(opts.getIncludeColumnNames(),
-          path.getAbsolutePath(), 0, 0, opts.timeUnit().getNativeId()));
+          path.getAbsolutePath(), 0, 0, opts.timeUnit().nativeId));
     }
-*/
   }
 
   /**
@@ -672,8 +659,7 @@ public final class Table implements AutoCloseable {
    * @return the data parsed as a table on the GPU.
    */
   public static Table readParquet(byte[] buffer) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return readParquet(ParquetOptions.DEFAULT, buffer, 0, buffer.length);
+    return readParquet(ParquetOptions.DEFAULT, buffer, 0, buffer.length);
   }
 
   /**
@@ -683,8 +669,7 @@ public final class Table implements AutoCloseable {
    * @return the data parsed as a table on the GPU.
    */
   public static Table readParquet(ParquetOptions opts, byte[] buffer) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return readParquet(opts, buffer, 0, buffer.length);
+    return readParquet(opts, buffer, 0, buffer.length);
   }
 
   /**
@@ -696,8 +681,6 @@ public final class Table implements AutoCloseable {
    * @return the data parsed as a table on the GPU.
    */
   public static Table readParquet(ParquetOptions opts, byte[] buffer, long offset, long len) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     if (len <= 0) {
       len = buffer.length - offset;
     }
@@ -709,7 +692,6 @@ public final class Table implements AutoCloseable {
       newBuf.setBytes(0, buffer, offset, len);
       return readParquet(opts, newBuf, 0, len);
     }
-*/
   }
 
   /**
@@ -722,8 +704,6 @@ public final class Table implements AutoCloseable {
    */
   public static Table readParquet(ParquetOptions opts, HostMemoryBuffer buffer,
                                   long offset, long len) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     if (len <= 0) {
       len = buffer.length - offset;
     }
@@ -733,9 +713,8 @@ public final class Table implements AutoCloseable {
     long amount = opts.getSizeGuessOrElse(len * COMPRESSION_RATIO_ESTIMATE);
     try (DevicePrediction prediction = new DevicePrediction(amount, "PARQUET BUFFER")) {
       return new Table(gdfReadParquet(opts.getIncludeColumnNames(),
-          null, buffer.getAddress() + offset, len, opts.timeUnit().getNativeId()));
+          null, buffer.getAddress() + offset, len, opts.timeUnit().nativeId));
     }
-*/
   }
 
   /**

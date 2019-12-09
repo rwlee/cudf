@@ -493,44 +493,41 @@ public class TableTest extends CudfTestBase {
 
   @Test
   void testReadParquetFull() {
-    fail();
-/*
     try (Table table = Table.readParquet(TEST_PARQUET_FILE)) {
       long rows = table.getRowCount();
       assertEquals(1000, rows);
 
-      TypeId[] expectedTypes = new TypeId[]{
-          TypeId.INT64, // loan_id
-          TypeId.INT32, // orig_channel
-          TypeId.FLOAT64, // orig_interest_rate
-          TypeId.INT32, // orig_upb
-          TypeId.INT32, // orig_loan_term
-          TypeId.DATE32, // orig_date
-          TypeId.DATE32, // first_pay_date
-          TypeId.FLOAT64, // orig_ltv
-          TypeId.FLOAT64, // orig_cltv
-          TypeId.FLOAT64, // num_borrowers
-          TypeId.FLOAT64, // dti
-          TypeId.FLOAT64, // borrower_credit_score
-          TypeId.INT32, // first_home_buyer
-          TypeId.INT32, // loan_purpose
-          TypeId.INT32, // property_type
-          TypeId.INT32, // num_units
-          TypeId.INT32, // occupancy_status
-          TypeId.INT32, // property_state
-          TypeId.INT32, // zip
-          TypeId.FLOAT64, // mortgage_insurance_percent
-          TypeId.INT32, // product_type
-          TypeId.FLOAT64, // coborrow_credit_score
-          TypeId.FLOAT64, // mortgage_insurance_type
-          TypeId.INT32, // relocation_mortgage_indicator
-          TypeId.INT32, // quarter
-          TypeId.INT32 // seller_id
+      DType[] expectedTypes = new DType[]{
+          DType.INT64, // loan_id
+          DType.INT32, // orig_channel
+          DType.FLOAT64, // orig_interest_rate
+          DType.INT32, // orig_upb
+          DType.INT32, // orig_loan_term
+          DType.TIMESTAMP_DAYS, // orig_date
+          DType.TIMESTAMP_DAYS, // first_pay_date
+          DType.FLOAT64, // orig_ltv
+          DType.FLOAT64, // orig_cltv
+          DType.FLOAT64, // num_borrowers
+          DType.FLOAT64, // dti
+          DType.FLOAT64, // borrower_credit_score
+          DType.INT32, // first_home_buyer
+          DType.INT32, // loan_purpose
+          DType.INT32, // property_type
+          DType.INT32, // num_units
+          DType.INT32, // occupancy_status
+          DType.INT32, // property_state
+          DType.INT32, // zip
+          DType.FLOAT64, // mortgage_insurance_percent
+          DType.INT32, // product_type
+          DType.FLOAT64, // coborrow_credit_score
+          DType.FLOAT64, // mortgage_insurance_type
+          DType.INT32, // relocation_mortgage_indicator
+          DType.INT32, // quarter
+          DType.INT32 // seller_id
       };
 
       assertTableTypes(expectedTypes, table);
     }
-*/
   }
 
   @Test
