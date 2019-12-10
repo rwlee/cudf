@@ -100,11 +100,11 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @param type               the type of the vector
    * @param rows               the number of rows in the vector.
    * @param nullCount          the number of nulls in the vector.
-   * @param hostDataBuffer     The host side data for the vector. In the case of STRING and
-   *                           STRING_CATEGORY this is the string data stored as bytes.
+   * @param hostDataBuffer     The host side data for the vector. In the case of STRING
+   *                           this is the string data stored as bytes.
    * @param hostValidityBuffer arrow like validity buffer 1 bit per row, with padding for
    *                           64-bit alignment.
-   * @param offsetBuffer       only valid for STRING and STRING_CATEGORY this is the offsets into
+   * @param offsetBuffer       only valid for STRING this is the offsets into
    *                           the hostDataBuffer indicating the start and end of a string
    *                           entry. It should be (rows + 1) ints.
    */
@@ -143,7 +143,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @param offsetBuffer a host buffer required for strings and string categories. The column
    *                    vector takes ownership of the buffer. Do not use the buffer after calling
    *                    this.
-   * @param resetOffsetsFromFirst if true and type is a string or a string_category then when
+   * @param resetOffsetsFromFirst if true and type is a string then when
    *                              unpacking the offsets, the initial offset will be reset to
    *                              0 and all other offsets will be updated to be relative to that
    *                              new 0.  This is used after serializing a partition, when the
@@ -1813,43 +1813,6 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // STRING CATEGORY METHODS
-  /////////////////////////////////////////////////////////////////////////////
-
-  /**
-   * Returns the category index of the specified string scalar.
-   * @param s a {@link Scalar} of type {@link DType#STRING} to lookup
-   * @return an integer {@link Scalar} containing the category index or -1
-   * if the string was not found in the category.
-   */
-  public Scalar getCategoryIndex(Scalar s) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    if (s.getType() != TypeId.STRING) {
-      throw new IllegalArgumentException("scalar must be a string type");
-    }
-    return Scalar.fromInt(Cudf.getCategoryIndex(this, s));
-*/
-  }
-
-  /**
-   * Returns the value bounds of category index of the specified string scalar.
-   * @param s a {@link Scalar} of type {@link DType#STRING} to lookup
-   * @return a two-entry array containing the (lower, upper) category index
-   *         bounds of the specified scalar. If the two array entries are equal
-   *         then the specified scalar was present in the category.
-   */
-  public int[] getCategoryBounds(Scalar s) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    if (s.getType() != TypeId.STRING) {
-      throw new IllegalArgumentException("scalar must be a string type");
-    }
-    return Cudf.getCategoryBounds(this, s);
-*/
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
   // INTERNAL/NATIVE ACCESS
   /////////////////////////////////////////////////////////////////////////////
 
@@ -2414,16 +2377,6 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
         b.append(s);
       }
     });
-  }
-
-  /**
-   * Create a new category string vector from the given values.  This API
-   * supports inline nulls. This is really intended to be used only for testing as
-   * it is slow and memory intensive to translate between java strings and UTF8 strings.
-   */
-  public static ColumnVector categoryFromStrings(String... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return fromStrings(TypeId.STRING_CATEGORY, values);
   }
 
   /**
