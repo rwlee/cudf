@@ -50,7 +50,7 @@ public class ParquetOptions extends ColumnFilterOptions {
      * @return builder for chaining
      */
     public Builder withTimeUnit(DType unit) {
-      // TODO assert unit.isTimestamp();
+      assert unit.isTimestamp();
       this.unit = unit;
       return this;
     }

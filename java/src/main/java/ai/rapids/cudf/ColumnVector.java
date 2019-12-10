@@ -871,6 +871,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * Get the value at index.
    */
   public final long getLong(long index) {
+    // Timestamps with time values are stored as longs
     assert type == DType.INT64 || type.hasTimeResolution();
     assertsForGet(index);
     return offHeap.getHostData().data.getLong(index * type.sizeInBytes);
@@ -2403,8 +2404,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * for tests.
    */
   public static ColumnVector fromBoxedShorts(Short... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.INT16, values.length, (b) -> b.appendBoxed(values));
+    return build(DType.INT16, values.length, (b) -> b.appendBoxed(values));
   }
 
   /**
@@ -2422,8 +2422,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * for tests.
    */
   public static ColumnVector fromBoxedLongs(Long... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.INT64, values.length, (b) -> b.appendBoxed(values));
+    return build(DType.INT64, values.length, (b) -> b.appendBoxed(values));
   }
 
   /**
@@ -2432,8 +2431,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * for tests.
    */
   public static ColumnVector fromBoxedFloats(Float... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.FLOAT32, values.length, (b) -> b.appendBoxed(values));
+    return build(DType.FLOAT32, values.length, (b) -> b.appendBoxed(values));
   }
 
   /**

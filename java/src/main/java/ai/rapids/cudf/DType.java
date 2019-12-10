@@ -20,47 +20,49 @@ package ai.rapids.cudf;
 import java.util.EnumSet;
 
 public enum DType {
-  EMPTY(0, 0),
-  INT8(1, 1),
-  INT16(2, 2),
-  INT32(4, 3),
-  INT64(8, 4),
-  FLOAT32(4, 5),
-  FLOAT64(8, 6),
+  EMPTY(0, 0, "NOT SUPPORTED"),
+  INT8(1, 1, "byte"),
+  INT16(2, 2, "short"),
+  INT32(4, 3, "int"),
+  INT64(8, 4, "long"),
+  FLOAT32(4, 5, "float"),
+  FLOAT64(8, 6, "double"),
   /**
    * Byte wise true non-0/false 0.  In general true will be 1.
    */
-  BOOL8(1, 7),
+  BOOL8(1, 7, "bool"),
   /**
    * Days since the UNIX epoch
    */
-  TIMESTAMP_DAYS(4, 8),
+  TIMESTAMP_DAYS(4, 8, "date32"),
   /**
    * s since the UNIX epoch
    */
-  TIMESTAMP_SECONDS(8, 9),
+  TIMESTAMP_SECONDS(8, 9, "timestamp[s]"),
   /**
    * ms since the UNIX epoch
    */
-  TIMESTAMP_MILLISECONDS(8, 10),
+  TIMESTAMP_MILLISECONDS(8, 10, "timestamp[ms]"),
   /**
    * microseconds since the UNIX epoch
    */
-  TIMESTAMP_MICROSECONDS(8, 11),
+  TIMESTAMP_MICROSECONDS(8, 11, "timestamp[us]"),
   /**
    * ns since the UNIX epoch
    */
-  TIMESTAMP_NANOSECONDS(8, 12),
-  CATEGORY(4, 13),
-  STRING(0, 14);
+  TIMESTAMP_NANOSECONDS(8, 12, "timestamp[ns]"),
+  CATEGORY(4, 13, "category"),
+  STRING(0, 14, "str");
 
   private static final DType[] TYPE_IDS = DType.values();
   final int sizeInBytes;
   final int nativeId;
+  final String simpleName;
 
-  DType(int sizeInBytes, int nativeId) {
+  DType(int sizeInBytes, int nativeId, String simpleName) {
     this.sizeInBytes = sizeInBytes;
     this.nativeId = nativeId;
+    this.simpleName = simpleName;
   }
 
   public boolean isTimestamp() {

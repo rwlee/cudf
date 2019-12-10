@@ -37,13 +37,13 @@ public class TableTest extends CudfTestBase {
   private static final File TEST_ORC_FILE = new File("src/test/resources/TestOrcFile.orc");
   private static final File TEST_ORC_TIMESTAMP_DATE_FILE = new File(
       "src/test/resources/timestamp-date-test.orc");
-/*
+
   private static final Schema CSV_DATA_BUFFER_SCHEMA = Schema.builder()
       .column(DType.INT32, "A")
       .column(DType.FLOAT64, "B")
       .column(DType.INT64, "C")
       .build();
-*/
+
   private static final byte[] CSV_DATA_BUFFER = ("A|B|C\n" +
       "'0'|'110.0'|'120'\n" +
       "1|111.0|121\n" +
@@ -349,8 +349,6 @@ public class TableTest extends CudfTestBase {
 
   @Test
   void testReadCSVBuffer() {
-    fail();
-/*
     CSVOptions opts = CSVOptions.builder()
         .includeColumn("A")
         .includeColumn("B")
@@ -367,13 +365,10 @@ public class TableTest extends CudfTestBase {
              TableTest.CSV_DATA_BUFFER)) {
       assertTablesAreEqual(expected, table);
     }
-*/
   }
 
   @Test
   void testReadCSVWithOffset() {
-    fail();
-/*
     CSVOptions opts = CSVOptions.builder()
         .includeColumn("A")
         .includeColumn("B")
@@ -390,7 +385,6 @@ public class TableTest extends CudfTestBase {
              TableTest.CSV_DATA_BUFFER, bytesToIgnore, CSV_DATA_BUFFER.length - bytesToIgnore)) {
       assertTablesAreEqual(expected, table);
     }
-*/
   }
 
   @Test
@@ -581,43 +575,37 @@ public class TableTest extends CudfTestBase {
 
   @Test
   void testReadORCNumPyTypes() {
-    fail();
-/*
-    // by default ORC will promote DATE32 to DATE64
-    // and TIMESTAMP is kept as it is
+    // by default ORC will promote TIMESTAMP_DAYS to TIMESTAMP_MILLISECONDS
+    DType found;
     try (Table table = Table.readORC(TEST_ORC_TIMESTAMP_DATE_FILE)) {
       assertEquals(2, table.getNumberOfColumns());
-      assertEquals(TypeId.TIMESTAMP, table.getColumn(0).getType());
-      assertEquals(TypeId.DATE64, table.getColumn(1).getType());
+      found = table.getColumn(0).getType();
+      assertTrue(found.isTimestamp());
+      assertEquals(DType.TIMESTAMP_MILLISECONDS, table.getColumn(1).getType());
     }
 
-    // specifying no NumPy types should load them as DATE32 and TIMESTAMP
+    // specifying no NumPy types should load them as TIMESTAMP_DAYS
     ORCOptions opts = ORCOptions.builder().withNumPyTypes(false).build();
     try (Table table = Table.readORC(opts, TEST_ORC_TIMESTAMP_DATE_FILE)) {
       assertEquals(2, table.getNumberOfColumns());
-      assertEquals(TypeId.TIMESTAMP, table.getColumn(0).getType());
-      assertEquals(TypeId.DATE32, table.getColumn(1).getType());
+      assertEquals(found, table.getColumn(0).getType());
+      assertEquals(DType.TIMESTAMP_DAYS, table.getColumn(1).getType());
     }
-*/
   }
 
   @Test
   void testReadORCTimeUnit() {
-    fail();
-/*
     // specifying no NumPy types should load them as DATE32 and TIMESTAMP
     // specifying TimeUnit will return the result in that unit
     ORCOptions opts = ORCOptions.builder()
         .withNumPyTypes(false)
-        .withTimeUnit(TimeUnit.SECONDS)
+        .withTimeUnit(DType.TIMESTAMP_SECONDS)
         .build();
     try (Table table = Table.readORC(opts, TEST_ORC_TIMESTAMP_DATE_FILE)) {
       assertEquals(2, table.getNumberOfColumns());
-      assertEquals(TypeId.TIMESTAMP, table.getColumn(0).getType());
-      assertEquals(TypeId.DATE32, table.getColumn(1).getType());
-      assertEquals(TimeUnit.SECONDS,table.getColumn(0).getTimeUnit());
+      assertEquals(DType.TIMESTAMP_SECONDS, table.getColumn(0).getType());
+      assertEquals(DType.TIMESTAMP_DAYS, table.getColumn(1).getType());
     }
-*/
   }
 
   @Test

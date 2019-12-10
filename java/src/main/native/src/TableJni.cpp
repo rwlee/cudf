@@ -157,7 +157,7 @@ JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_Table_orderBy(
   CATCH_STD(env, NULL);
 }
 
-JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_Table_gdfReadCSV(
+JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_Table_readCSV(
     JNIEnv *env, jclass j_class_object, jobjectArray col_names, jobjectArray data_types,
     jobjectArray filter_col_names, jstring inputfilepath, jlong buffer, jlong buffer_length,
     jint header_row, jbyte delim, jbyte quote, jbyte comment, jobjectArray null_values,
@@ -191,14 +191,14 @@ JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_Table_gdfReadCSV(
     cudf::jni::native_jstringArray n_false_values(env, false_values);
     cudf::jni::native_jstringArray n_filter_col_names(env, filter_col_names);
 
-    std::unique_ptr<cudf::source_info> source;
+    std::unique_ptr<cudf::experimental::io::source_info> source;
     if (read_buffer) {
-      source.reset(new cudf::source_info(reinterpret_cast<char *>(buffer), buffer_length));
+      source.reset(new cudf::experimental::io::source_info(reinterpret_cast<char *>(buffer), buffer_length));
     } else {
-      source.reset(new cudf::source_info(filename.get()));
+      source.reset(new cudf::experimental::io::source_info(filename.get()));
     }
 
-    cudf::csv_read_arg read_arg{*source};
+    cudf::experimental::io::read_csv_args read_arg{*source};
     read_arg.lineterminator = '\n';
     // delimiter ideally passed in
     read_arg.delimiter = delim;
@@ -222,23 +222,20 @@ JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_Table_gdfReadCSV(
 
     read_arg.mangle_dupe_cols = true;
     read_arg.dayfirst = 0;
-    read_arg.compression = "infer";
+    read_arg.compression = cudf::experimental::io::compression_type::AUTO;
     read_arg.decimal = '.';
     read_arg.quotechar = quote;
-    read_arg.quoting = cudf::csv_read_arg::QUOTE_MINIMAL;
+    read_arg.quoting = cudf::experimental::io::quote_style::MINIMAL;
     read_arg.doublequote = true;
     read_arg.comment = comment;
 
-    cudf::table result = read_csv(read_arg);
-    cudf::jni::native_jlongArray native_handles(env, reinterpret_cast<jlong *>(result.begin()),
-                                                result.num_columns());
-
-    return native_handles.get_jArray();
+    std::unique_ptr<cudf::experimental::table> result = cudf::experimental::io::read_csv(read_arg);
+    return cudf::jni::convert_table_for_return(env, result);
   }
   CATCH_STD(env, NULL);
 }
 
-JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_Table_gdfReadParquet(
+JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_Table_readParquet(
     JNIEnv *env, jclass j_class_object, jobjectArray filter_col_names, jstring inputfilepath,
     jlong buffer, jlong buffer_length, jint unit) {
   bool read_buffer = true;
@@ -285,7 +282,7 @@ JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_Table_gdfReadParquet(
   CATCH_STD(env, NULL);
 }
 
-JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_Table_gdfReadORC(
+JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_Table_readORC(
     JNIEnv *env, jclass j_class_object, jobjectArray filter_col_names, jstring inputfilepath,
     jlong buffer, jlong buffer_length, jboolean usingNumPyTypes, jint unit) {
   bool read_buffer = true;
@@ -309,26 +306,24 @@ JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_Table_gdfReadORC(
 
     cudf::jni::native_jstringArray n_filter_col_names(env, filter_col_names);
 
-    std::unique_ptr<cudf::source_info> source;
+    std::unique_ptr<cudf::experimental::io::source_info> source;
     if (read_buffer) {
-      source.reset(new cudf::source_info(reinterpret_cast<char *>(buffer), buffer_length));
+      source.reset(new cudf::experimental::io::source_info(reinterpret_cast<char *>(buffer), buffer_length));
     } else {
-      source.reset(new cudf::source_info(filename.get()));
+      source.reset(new cudf::experimental::io::source_info(filename.get()));
     }
 
-    cudf::orc_read_arg read_arg{*source};
+    cudf::experimental::io::read_orc_args read_arg{*source};
     read_arg.columns = n_filter_col_names.as_cpp_vector();
     read_arg.stripe = -1;
     read_arg.skip_rows = -1;
     read_arg.num_rows = -1;
     read_arg.use_index = false;
     read_arg.use_np_dtypes = static_cast<bool>(usingNumPyTypes);
-    read_arg.timestamp_unit = static_cast<gdf_time_unit>(unit);
+    read_arg.timestamp_type = cudf::data_type(static_cast<cudf::type_id>(unit));
 
-    cudf::table result = read_orc(read_arg);
-    cudf::jni::native_jlongArray native_handles(env, reinterpret_cast<jlong *>(result.begin()),
-                                                result.num_columns());
-    return native_handles.get_jArray();
+    std::unique_ptr<cudf::experimental::table> result = cudf::experimental::io::read_orc(read_arg);
+    return cudf::jni::convert_table_for_return(env, result);
   }
   CATCH_STD(env, NULL);
 }
