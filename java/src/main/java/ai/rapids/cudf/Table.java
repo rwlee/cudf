@@ -147,14 +147,11 @@ public final class Table implements AutoCloseable {
    * Returns the Device memory buffer size.
    */
   public long getDeviceMemorySize() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     long total = 0;
     for (ColumnVector cv: columns) {
       total += cv.getDeviceMemorySize();
     }
     return total;
-*/
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -195,12 +192,12 @@ public final class Table implements AutoCloseable {
    * @param trueValues        values that should be treated as boolean true
    * @param falseValues       values that should be treated as boolean false
    */
-  private static native long[] gdfReadCSV(String[] columnNames, String[] dTypes,
-                                          String[] filterColumnNames,
-                                          String filePath, long address, long length,
-                                          int headerRow, byte delim, byte quote,
-                                          byte comment, String[] nullValues,
-                                          String[] trueValues, String[] falseValues) throws CudfException;
+  private static native long[] readCSV(String[] columnNames, String[] dTypes,
+                                       String[] filterColumnNames,
+                                       String filePath, long address, long length,
+                                       int headerRow, byte delim, byte quote,
+                                       byte comment, String[] nullValues,
+                                       String[] trueValues, String[] falseValues) throws CudfException;
 
   /**
    * Read in Parquet formatted data.
@@ -211,8 +208,8 @@ public final class Table implements AutoCloseable {
    * @param length            the length of the buffer to read from.
    * @param timeUnit          return type of TimeStamp in units
    */
-  private static native long[] gdfReadParquet(String[] filterColumnNames, String filePath,
-                                              long address, long length, int timeUnit) throws CudfException;
+  private static native long[] readParquet(String[] filterColumnNames, String filePath,
+                                           long address, long length, int timeUnit) throws CudfException;
 
   /**
    * Read in ORC formatted data.
@@ -225,15 +222,15 @@ public final class Table implements AutoCloseable {
    *                          columns to DATE64 for compatibility with NumPy.
    * @param timeUnit          return type of TimeStamp in units
    */
-  private static native long[] gdfReadORC(String[] filterColumnNames,
-                                          String filePath, long address, long length,
-                                          boolean usingNumPyTypes, int timeUnit) throws CudfException;
+  private static native long[] readORC(String[] filterColumnNames,
+                                       String filePath, long address, long length,
+                                       boolean usingNumPyTypes, int timeUnit) throws CudfException;
 
   private static native long[] gdfGroupByAggregate(long inputTable, int[] keyIndices, int[] aggColumnsIndices,
                                                    int[] aggTypes, boolean ignoreNullKeys) throws CudfException;
 
-  private static native long[] gdfOrderBy(long inputTable, long[] sortKeys, boolean[] isDescending,
-                                          boolean areNullsSmallest) throws CudfException;
+  private static native long[] orderBy(long inputTable, long[] sortKeys, boolean[] isDescending,
+                                       boolean[] areNullsSmallest) throws CudfException;
 
   private static native long[] gdfLeftJoin(long leftTable, int[] leftJoinCols, long rightTable,
                                            int[] rightJoinCols) throws CudfException;
@@ -243,9 +240,7 @@ public final class Table implements AutoCloseable {
 
   private static native long[] concatenate(long[] cudfTablePointers) throws CudfException;
 
-  private static native long[] gdfFilter(long input, long mask);
-
-  private static native long sortedOrder(long input, boolean[] isDescending, boolean[] areNullsSmallest);
+  private static native long[] filter(long input, long mask);
 
   private native long createCudfTableView(long[] nativeColumnHandles);
 
@@ -514,8 +509,7 @@ public final class Table implements AutoCloseable {
    * @return the file parsed as a table on the GPU.
    */
   public static Table readCSV(Schema schema, File path) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return readCSV(schema, CSVOptions.DEFAULT, path);
+    return readCSV(schema, CSVOptions.DEFAULT, path);
   }
 
   /**
@@ -526,12 +520,10 @@ public final class Table implements AutoCloseable {
    * @return the file parsed as a table on the GPU.
    */
   public static Table readCSV(Schema schema, CSVOptions opts, File path) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     long amount = opts.getSizeGuessOrElse(() -> path.length());
     try (DevicePrediction prediction = new DevicePrediction(amount, "CSV FILE")) {
       return new Table(
-          gdfReadCSV(schema.getColumnNames(), schema.getTypesAsStrings(),
+          readCSV(schema.getColumnNames(), schema.getTypesAsStrings(),
               opts.getIncludeColumnNames(), path.getAbsolutePath(),
               0, 0,
               opts.getHeaderRow(),
@@ -542,7 +534,6 @@ public final class Table implements AutoCloseable {
               opts.getTrueValues(),
               opts.getFalseValues()));
     }
-*/
   }
 
   /**
@@ -552,8 +543,7 @@ public final class Table implements AutoCloseable {
    * @return the data parsed as a table on the GPU.
    */
   public static Table readCSV(Schema schema, byte[] buffer) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return readCSV(schema, CSVOptions.DEFAULT, buffer, 0, buffer.length);
+    return readCSV(schema, CSVOptions.DEFAULT, buffer, 0, buffer.length);
   }
 
   /**
@@ -564,8 +554,7 @@ public final class Table implements AutoCloseable {
    * @return the data parsed as a table on the GPU.
    */
   public static Table readCSV(Schema schema, CSVOptions opts, byte[] buffer) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return readCSV(schema, opts, buffer, 0, buffer.length);
+    return readCSV(schema, opts, buffer, 0, buffer.length);
   }
 
   /**
@@ -579,8 +568,6 @@ public final class Table implements AutoCloseable {
    */
   public static Table readCSV(Schema schema, CSVOptions opts, byte[] buffer, long offset,
                               long len) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     if (len <= 0) {
       len = buffer.length - offset;
     }
@@ -592,7 +579,6 @@ public final class Table implements AutoCloseable {
       newBuf.setBytes(0, buffer, offset, len);
       return readCSV(schema, opts, newBuf, 0, len);
     }
-*/
   }
 
   /**
@@ -606,8 +592,6 @@ public final class Table implements AutoCloseable {
    */
   public static Table readCSV(Schema schema, CSVOptions opts, HostMemoryBuffer buffer,
                               long offset, long len) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     if (len <= 0) {
       len = buffer.length - offset;
     }
@@ -616,7 +600,7 @@ public final class Table implements AutoCloseable {
     assert offset >= 0 && offset < buffer.length;
     long amount = opts.getSizeGuessOrElse(len);
     try (DevicePrediction prediction = new DevicePrediction(amount, "CSV BUFFER")) {
-      return new Table(gdfReadCSV(schema.getColumnNames(), schema.getTypesAsStrings(),
+      return new Table(readCSV(schema.getColumnNames(), schema.getTypesAsStrings(),
           opts.getIncludeColumnNames(), null,
           buffer.getAddress() + offset, len,
           opts.getHeaderRow(),
@@ -627,7 +611,6 @@ public final class Table implements AutoCloseable {
           opts.getTrueValues(),
           opts.getFalseValues()));
     }
-*/
   }
 
   /**
@@ -648,7 +631,7 @@ public final class Table implements AutoCloseable {
   public static Table readParquet(ParquetOptions opts, File path) {
     long amount = opts.getSizeGuessOrElse(() -> path.length() * COMPRESSION_RATIO_ESTIMATE);
     try (DevicePrediction prediction = new DevicePrediction(amount, "PARQUET FILE")) {
-      return new Table(gdfReadParquet(opts.getIncludeColumnNames(),
+      return new Table(readParquet(opts.getIncludeColumnNames(),
           path.getAbsolutePath(), 0, 0, opts.timeUnit().nativeId));
     }
   }
@@ -712,7 +695,7 @@ public final class Table implements AutoCloseable {
     assert offset >= 0 && offset < buffer.length;
     long amount = opts.getSizeGuessOrElse(len * COMPRESSION_RATIO_ESTIMATE);
     try (DevicePrediction prediction = new DevicePrediction(amount, "PARQUET BUFFER")) {
-      return new Table(gdfReadParquet(opts.getIncludeColumnNames(),
+      return new Table(readParquet(opts.getIncludeColumnNames(),
           null, buffer.getAddress() + offset, len, opts.timeUnit().nativeId));
     }
   }
@@ -723,8 +706,7 @@ public final class Table implements AutoCloseable {
    * @return the file parsed as a table on the GPU.
    */
   public static Table readORC(File path) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return readORC(ORCOptions.DEFAULT, path);
+    return readORC(ORCOptions.DEFAULT, path);
   }
 
   /**
@@ -734,24 +716,21 @@ public final class Table implements AutoCloseable {
    * @return the file parsed as a table on the GPU.
    */
   public static Table readORC(ORCOptions opts, File path) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     long amount = opts.getSizeGuessOrElse(() -> path.length() * COMPRESSION_RATIO_ESTIMATE);
     try (DevicePrediction prediction = new DevicePrediction(amount, "ORC FILE")) {
-      return new Table(gdfReadORC(opts.getIncludeColumnNames(),
-          path.getAbsolutePath(), 0, 0, opts.usingNumPyTypes(), opts.timeUnit().getNativeId()));
+      return new Table(readORC(opts.getIncludeColumnNames(),
+          path.getAbsolutePath(), 0, 0, opts.usingNumPyTypes(), opts.timeUnit().nativeId));
     }
-*/
   }
 
   /**
    * Read ORC formatted data.
    * @param buffer raw ORC formatted bytes.
+   * @param buffer raw ORC formatted bytes.
    * @return the data parsed as a table on the GPU.
    */
   public static Table readORC(byte[] buffer) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return readORC(ORCOptions.DEFAULT, buffer, 0, buffer.length);
+    return readORC(ORCOptions.DEFAULT, buffer, 0, buffer.length);
   }
 
   /**
@@ -761,8 +740,7 @@ public final class Table implements AutoCloseable {
    * @return the data parsed as a table on the GPU.
    */
   public static Table readORC(ORCOptions opts, byte[] buffer) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return readORC(opts, buffer, 0, buffer.length);
+    return readORC(opts, buffer, 0, buffer.length);
   }
 
   /**
@@ -774,8 +752,6 @@ public final class Table implements AutoCloseable {
    * @return the data parsed as a table on the GPU.
    */
   public static Table readORC(ORCOptions opts, byte[] buffer, long offset, long len) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     if (len <= 0) {
       len = buffer.length - offset;
     }
@@ -787,7 +763,6 @@ public final class Table implements AutoCloseable {
       newBuf.setBytes(0, buffer, offset, len);
       return readORC(opts, newBuf, 0, len);
     }
-*/
   }
 
   /**
@@ -800,8 +775,6 @@ public final class Table implements AutoCloseable {
    */
   public static Table readORC(ORCOptions opts, HostMemoryBuffer buffer,
                               long offset, long len) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     if (len <= 0) {
       len = buffer.length - offset;
     }
@@ -810,11 +783,10 @@ public final class Table implements AutoCloseable {
     assert offset >= 0 && offset < buffer.length;
     long amount = opts.getSizeGuessOrElse(len * COMPRESSION_RATIO_ESTIMATE);
     try (DevicePrediction prediction = new DevicePrediction(amount, "ORC BUFFER")) {
-      return new Table(gdfReadORC(opts.getIncludeColumnNames(),
+      return new Table(readORC(opts.getIncludeColumnNames(),
           null, buffer.getAddress() + offset, len, opts.usingNumPyTypes(),
-          opts.timeUnit().getNativeId()));
+          opts.timeUnit().nativeId));
     }
-*/
   }
 
   /**
@@ -970,28 +942,26 @@ public final class Table implements AutoCloseable {
    * the {@link ColumnVector} returned as part of the output {@link Table}
    * <p>
    * Example usage: orderBy(true, Table.asc(0), Table.desc(3)...);
-   * @param areNullsSmallest - represents if nulls are to be considered smaller than non-nulls.
    * @param args             - Suppliers to initialize sortKeys.
    * @return Sorted Table
    */
-  public Table orderBy(boolean areNullsSmallest, OrderByArg... args) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
+  public Table orderBy(OrderByArg... args) {
     assert args.length <= columns.length;
     long[] sortKeys = new long[args.length];
     boolean[] isDescending = new boolean[args.length];
+    boolean[] areNullsSmallest = new boolean[args.length];
     for (int i = 0; i < args.length; i++) {
       int index = args[i].index;
       assert (index >= 0 && index < columns.length) :
           "index is out of range 0 <= " + index + " < " + columns.length;
       isDescending[i] = args[i].isDescending;
+      areNullsSmallest[i] = args[i].isNullSmallest;
       sortKeys[i] = columns[index].getNativeCudfColumnAddress();
     }
 
     try (DevicePrediction prediction = new DevicePrediction(getDeviceMemorySize(), "orderBy")) {
-      return new Table(gdfOrderBy(nativeHandle, sortKeys, isDescending, areNullsSmallest));
+      return new Table(orderBy(nativeHandle, sortKeys, isDescending, areNullsSmallest));
     }
-*/
   }
 
   public static OrderByArg asc(final int index) {
@@ -1094,17 +1064,11 @@ public final class Table implements AutoCloseable {
    * the filter defined by the boolean mask
    */
   public Table filter(ColumnVector mask) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     assert mask.getType() == DType.BOOL8 : "Mask column must be of type BOOL8";
     assert getRowCount() == 0 || getRowCount() == mask.getRowCount() : "Mask column has incorrect size";
-    for (ColumnVector col : getColumns()){
-      assert col.getType() != DType.STRING : "STRING type must be converted to a STRING_CATEGORY for filter";
-    }
     try (DevicePrediction prediction = new DevicePrediction(getDeviceMemorySize(), "filter")) {
-      return new Table(gdfFilter(nativeHandle, mask.getNativeCudfColumnAddress()));
+      return new Table(filter(nativeHandle, mask.getNativeCudfColumnAddress()));
     }
-*/
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -1455,36 +1419,30 @@ public final class Table implements AutoCloseable {
           ret = ColumnVector.fromStrings((String[]) dataArray);
           break;
         case BOOL8:
-          throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//          ret = ColumnVector.fromBoxedBooleans((Boolean[]) dataArray);
-//          break;
+          ret = ColumnVector.fromBoxedBooleans((Boolean[]) dataArray);
+          break;
         case INT8:
-          throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//          ret = ColumnVector.fromBoxedBytes((Byte[]) dataArray);
-//          break;
+          ret = ColumnVector.fromBoxedBytes((Byte[]) dataArray);
+          break;
         case INT16:
-          throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//          ret = ColumnVector.fromBoxedShorts((Short[]) dataArray);
-//          break;
+          ret = ColumnVector.fromBoxedShorts((Short[]) dataArray);
+          break;
         case INT32:
           ret = ColumnVector.fromBoxedInts((Integer[]) dataArray);
           break;
         case INT64:
-          throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//          ret = ColumnVector.fromBoxedLongs((Long[]) dataArray);
-//          break;
+          ret = ColumnVector.fromBoxedLongs((Long[]) dataArray);
+          break;
         case TIMESTAMP_DAYS:
           throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
 //          ret = ColumnVector.timestampsFromBoxedLongs(unit, (Long[]) dataArray);
 //          break;
         case FLOAT32:
-          throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//          ret = ColumnVector.fromBoxedFloats((Float[]) dataArray);
-//          break;
+          ret = ColumnVector.fromBoxedFloats((Float[]) dataArray);
+          break;
         case FLOAT64:
-          throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//          ret = ColumnVector.fromBoxedDoubles((Double[]) dataArray);
-//          break;
+          ret = ColumnVector.fromBoxedDoubles((Double[]) dataArray);
+          break;
         default:
           throw new IllegalArgumentException(type + " is not supported yet");
       }
@@ -1507,46 +1465,5 @@ public final class Table implements AutoCloseable {
         }
       }
     }
-  }
-
-  /**
-   * Sort the table
-   * @param args
-   * @return
-   */
-  public ColumnVector sortedOrder(OrderByArg... args) {
-    assert args.length == columns.length || args.length == 0;
-    boolean[] isDescending = new boolean[args.length];
-    boolean[] isNullSmallest = new boolean[args.length];
-    for (int i = 0; i < args.length; i++) {
-      int index = args[i].index;
-      assert (index >= 0 && index < columns.length) :
-          "index is out of range 0 <= " + index + " < " + columns.length;
-      isDescending[i] = args[i].isDescending;
-      isNullSmallest[i] = args[i].isNullSmallest;
-    }
-
-    return new ColumnVector(sortedOrder(this.nativeHandle, isDescending, isNullSmallest));
-  }
-
-  /**
-   * Sort the table
-   * @param areNullSmallest
-   * @param args
-   * @return
-   */
-  public ColumnVector sortedOrder(boolean areNullSmallest, OrderByArg... args) {
-    assert args.length == columns.length || args.length == 0;
-    boolean[] isDescending = new boolean[args.length];
-    boolean[] isNullSmallest = new boolean[args.length];
-    for (int i = 0; i < args.length; i++) {
-      int index = args[i].index;
-      assert (index >= 0 && index < columns.length) :
-          "index is out of range 0 <= " + index + " < " + columns.length;
-      isDescending[i] = args[i].isDescending;
-      isNullSmallest[i] = areNullSmallest;
-    }
-
-    return new ColumnVector(sortedOrder(this.nativeHandle, isDescending, isNullSmallest));
   }
 }

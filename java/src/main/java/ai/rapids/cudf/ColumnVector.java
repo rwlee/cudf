@@ -100,11 +100,11 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @param type               the type of the vector
    * @param rows               the number of rows in the vector.
    * @param nullCount          the number of nulls in the vector.
-   * @param hostDataBuffer     The host side data for the vector. In the case of STRING and
-   *                           STRING_CATEGORY this is the string data stored as bytes.
+   * @param hostDataBuffer     The host side data for the vector. In the case of STRING
+   *                           this is the string data stored as bytes.
    * @param hostValidityBuffer arrow like validity buffer 1 bit per row, with padding for
    *                           64-bit alignment.
-   * @param offsetBuffer       only valid for STRING and STRING_CATEGORY this is the offsets into
+   * @param offsetBuffer       only valid for STRING this is the offsets into
    *                           the hostDataBuffer indicating the start and end of a string
    *                           entry. It should be (rows + 1) ints.
    */
@@ -143,7 +143,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @param offsetBuffer a host buffer required for strings and string categories. The column
    *                    vector takes ownership of the buffer. Do not use the buffer after calling
    *                    this.
-   * @param resetOffsetsFromFirst if true and type is a string or a string_category then when
+   * @param resetOffsetsFromFirst if true and type is a string then when
    *                              unpacking the offsets, the initial offset will be reset to
    *                              0 and all other offsets will be updated to be relative to that
    *                              new 0.  This is used after serializing a partition, when the
@@ -303,11 +303,10 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return ColumnVector holding length of string at index 'i' in the original vector
    */
   public ColumnVector getLengths() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert TypeId.STRING == type : "length only available for String type";
-    return new ColumnVector(cudfLengths(getNativeCudfColumnAddress()));
-*/
+    assert DType.STRING == type : "length only available for String type";
+    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(DType.INT32), "getLengths")) {
+      return new ColumnVector(lengths(getNativeCudfColumnAddress()));
+    }
   }
 
   /**
@@ -385,13 +384,10 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return ColumnVector, where each element at i = byte count of string at index 'i' in the original vector
    */
   public ColumnVector getByteCount() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert type == TypeId.STRING : "type has to be a String";
-    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(TypeId.INT32), "byteCount")) {
-      return new ColumnVector(cudfByteCount(getNativeCudfColumnAddress()));
+    assert type == DType.STRING : "type has to be a String";
+    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(DType.INT32), "byteCount")) {
+      return new ColumnVector(byteCount(getNativeCudfColumnAddress()));
     }
-*/
   }
 
   /**
@@ -775,13 +771,9 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return - A new vector containing the old values replaced with new values
    */
   public ColumnVector findAndReplaceAll(ColumnVector oldValues, ColumnVector newValues) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert this.type != TypeId.STRING_CATEGORY : "STRING_CATEGORY isn't supported at this time";
     try (DevicePrediction prediction = new DevicePrediction(getDeviceMemorySize(), "findAndReplace")) {
       return new ColumnVector(findAndReplaceAll(oldValues.getNativeCudfColumnAddress(), newValues.getNativeCudfColumnAddress(), this.getNativeCudfColumnAddress()));
     }
-*/
   }
 
   /**
@@ -877,6 +869,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * Get the value at index.
    */
   public final long getLong(long index) {
+    // Timestamps with time values are stored as longs
     assert type == DType.INT64 || type.hasTimeResolution();
     assertsForGet(index);
     return offHeap.getHostData().data.getLong(index * type.sizeInBytes);
@@ -1811,43 +1804,6 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // STRING CATEGORY METHODS
-  /////////////////////////////////////////////////////////////////////////////
-
-  /**
-   * Returns the category index of the specified string scalar.
-   * @param s a {@link Scalar} of type {@link DType#STRING} to lookup
-   * @return an integer {@link Scalar} containing the category index or -1
-   * if the string was not found in the category.
-   */
-  public Scalar getCategoryIndex(Scalar s) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    if (s.getType() != TypeId.STRING) {
-      throw new IllegalArgumentException("scalar must be a string type");
-    }
-    return Scalar.fromInt(Cudf.getCategoryIndex(this, s));
-*/
-  }
-
-  /**
-   * Returns the value bounds of category index of the specified string scalar.
-   * @param s a {@link Scalar} of type {@link DType#STRING} to lookup
-   * @return a two-entry array containing the (lower, upper) category index
-   *         bounds of the specified scalar. If the two array entries are equal
-   *         then the specified scalar was present in the category.
-   */
-  public int[] getCategoryBounds(Scalar s) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    if (s.getType() != TypeId.STRING) {
-      throw new IllegalArgumentException("scalar must be a string type");
-    }
-    return Cudf.getCategoryBounds(this, s);
-*/
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
   // INTERNAL/NATIVE ACCESS
   /////////////////////////////////////////////////////////////////////////////
 
@@ -1873,21 +1829,21 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 
 //  private static native long allocateCudfColumn() throws CudfException;
 
-//  private native static long cudfByteCount(long cudfColumnHandle) throws CudfException;
+  private native static long byteCount(long cudfColumnHandle) throws CudfException;
 
   private static native long castTo(long nativeHandle, int type);
 
-  /**
-   * Set a CuDF column given data and validity bitmask pointers, size, and datatype, and
-   * count of null (non-valid) elements
-   * @param cudfColumnHandle native handle of cudf::column.
-   * @param dataPtr          Pointer to data.
-   * @param valid            Pointer to validity bitmask for the data.
-   * @param size             Number of rows in the column.
-   * @param TypeId            Data type of the column.
-   * @param null_count       The number of non-valid elements in the validity bitmask.
-   * @param timeUnit         {@link TimeUnit}
-   */
+//  /**
+//   * Set a CuDF column given data and validity bitmask pointers, size, and datatype, and
+//   * count of null (non-valid) elements
+//   * @param cudfColumnHandle native handle of cudf::column.
+//   * @param dataPtr          Pointer to data.
+//   * @param valid            Pointer to validity bitmask for the data.
+//   * @param size             Number of rows in the column.
+//   * @param TypeId            Data type of the column.
+//   * @param null_count       The number of non-valid elements in the validity bitmask.
+//   * @param timeUnit         {@link TimeUnit}
+//   */
 //  private static native void cudfColumnViewAugmented(long cudfColumnHandle, long dataPtr,
 //                                                     long valid,
 //                                                     int size, int TypeId, int null_count,
@@ -1897,7 +1853,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 
 //  private native long[] split(long nativeHandle, long indices) throws CudfException;
 
-//  private native long findAndReplaceAll(long valuesHandle, long replaceHandle, long myself) throws CudfException;
+  private native long findAndReplaceAll(long valuesHandle, long replaceHandle, long myself) throws CudfException;
 
   /**
    * Translate the host side string representation of strings into the device side representation
@@ -1979,7 +1935,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 //                                           int forward_window, int agg_type, long window_col,
 //                                           long min_periods_col, long forward_window_col);
 
-//  private static native long cudfLengths(long cudfColumnHandle) throws CudfException;
+  private static native long lengths(long cudfColumnHandle) throws CudfException;
 
 //  private static native long hash(long cudfColumnHandle, int nativeHashId) throws CudfException;
 
@@ -2312,8 +2268,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * Create a new vector from the given values.
    */
   public static ColumnVector boolFromBytes(byte... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.BOOL8, values.length, (b) -> b.appendArray(values));
+    return build(DType.BOOL8, values.length, (b) -> b.appendArray(values));
   }
 
   /**
@@ -2417,16 +2372,6 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
   }
 
   /**
-   * Create a new category string vector from the given values.  This API
-   * supports inline nulls. This is really intended to be used only for testing as
-   * it is slow and memory intensive to translate between java strings and UTF8 strings.
-   */
-  public static ColumnVector categoryFromStrings(String... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return fromStrings(TypeId.STRING_CATEGORY, values);
-  }
-
-  /**
    * Create a new string vector from the given values.  This API
    * supports inline nulls. This is really intended to be used only for testing as
    * it is slow and memory intensive to translate between java strings and UTF8 strings.
@@ -2450,8 +2395,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * for tests.
    */
   public static ColumnVector fromBoxedBytes(Byte... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.INT8, values.length, (b) -> b.appendBoxed(values));
+    return build(DType.INT8, values.length, (b) -> b.appendBoxed(values));
   }
 
   /**
@@ -2460,8 +2404,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * for tests.
    */
   public static ColumnVector fromBoxedShorts(Short... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.INT16, values.length, (b) -> b.appendBoxed(values));
+    return build(DType.INT16, values.length, (b) -> b.appendBoxed(values));
   }
 
   /**
@@ -2479,8 +2422,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * for tests.
    */
   public static ColumnVector fromBoxedLongs(Long... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.INT64, values.length, (b) -> b.appendBoxed(values));
+    return build(DType.INT64, values.length, (b) -> b.appendBoxed(values));
   }
 
   /**
@@ -2489,8 +2431,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * for tests.
    */
   public static ColumnVector fromBoxedFloats(Float... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.FLOAT32, values.length, (b) -> b.appendBoxed(values));
+    return build(DType.FLOAT32, values.length, (b) -> b.appendBoxed(values));
   }
 
   /**

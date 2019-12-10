@@ -18,6 +18,8 @@
 #include <cudf/column/column_view.hpp>
 #include <cudf/datetime.hpp>
 #include <cudf/replace.hpp>
+#include <cudf/strings/attributes.hpp>
+#include <cudf/strings/strings_column_view.hpp>
 #include <cudf/unary.hpp>
 
 #include "cudf/legacy/copying.hpp"
@@ -558,49 +560,24 @@ JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_ColumnVector_split(JNIEnv *env,
   CATCH_STD(env, NULL);
 }
 
-JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_cudfLengths(JNIEnv *env, jclass clazz,
+JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_lengths(JNIEnv *env, jclass clazz,
                                                                      jlong column_handle) {
   JNI_NULL_CHECK(env, column_handle, "input column is null", 0);
   try {
-    gdf_column *n_column = reinterpret_cast<gdf_column *>(column_handle);
-    cudf::jni::gdf_column_wrapper lengths(n_column->size, gdf_dtype::GDF_INT32,
-                                          n_column->null_count != 0);
-    if (n_column->size > 0) {
-      NVStrings *strings = static_cast<NVStrings *>(n_column->data);
-      JNI_ARG_CHECK(env, n_column->size == strings->size(),
-                    "NVStrings size and gdf_column size mismatch", 0);
-      strings->len(static_cast<int *>(lengths->data));
-      if (n_column->null_count > 0) {
-        CUDA_TRY(cudaMemcpy(lengths->valid, n_column->valid,
-                            gdf_num_bitmask_elements(n_column->size), cudaMemcpyDeviceToDevice));
-        lengths->null_count = n_column->null_count;
-      }
-    }
-    return reinterpret_cast<jlong>(lengths.release());
+    cudf::column *n_column = reinterpret_cast<cudf::column *>(column_handle);
+    std::unique_ptr<cudf::column> result = cudf::strings::count_characters(cudf::strings_column_view(n_column->view()));
+    return reinterpret_cast<jlong>(result.release());
   }
   CATCH_STD(env, 0);
 }
 
-JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_cudfByteCount(JNIEnv *env, jclass clazz,
+JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_byteCount(JNIEnv *env, jclass clazz,
                                                                        jlong column_handle) {
   JNI_NULL_CHECK(env, column_handle, "input column is null", 0);
   try {
-    gdf_column *n_column = reinterpret_cast<gdf_column *>(column_handle);
-    cudf::jni::gdf_column_wrapper byte_counts_vector(n_column->size, gdf_dtype::GDF_INT32,
-                                                     n_column->null_count != 0);
-
-    if (n_column->size > 0) {
-      NVStrings *strings = static_cast<NVStrings *>(n_column->data);
-      JNI_ARG_CHECK(env, n_column->size == strings->size(),
-                    "NVStrings size and gdf_column size mismatch", 0);
-      strings->byte_count(static_cast<int *>(byte_counts_vector->data));
-      if (n_column->null_count > 0) {
-        CUDA_TRY(cudaMemcpy(byte_counts_vector->valid, n_column->valid,
-                            gdf_num_bitmask_elements(n_column->size), cudaMemcpyDeviceToDevice));
-        byte_counts_vector->null_count = n_column->null_count;
-      }
-    }
-    return reinterpret_cast<jlong>(byte_counts_vector.release());
+    cudf::column *n_column = reinterpret_cast<cudf::column *>(column_handle);
+    std::unique_ptr<cudf::column> result = cudf::strings::count_bytes(cudf::strings_column_view(n_column->view()));
+    return reinterpret_cast<jlong>(result.release());
   }
   CATCH_STD(env, 0);
 }
@@ -706,19 +683,15 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_findAndReplaceAll(JNIEn
   JNI_NULL_CHECK(env, new_values_handle, "replace column is null", 0);
   JNI_NULL_CHECK(env, input_handle, "input column is null", 0);
 
-  try {
-    gdf_column *input_column = reinterpret_cast<gdf_column *>(input_handle);
-    gdf_column *old_values_column = reinterpret_cast<gdf_column *>(old_values_handle);
-    gdf_column *new_values_column = reinterpret_cast<gdf_column *>(new_values_handle);
+  using cudf::column;
 
-    std::unique_ptr<gdf_column, decltype(free) *> result(
-        static_cast<gdf_column *>(calloc(1, sizeof(gdf_column))), free);
-    if (result.get() == nullptr) {
-      cudf::jni::throw_java_exception(env, "java/lang/OutOfMemoryError",
-                                      "Could not allocate native memory");
-    }
-    *result.get() =
-        cudf::find_and_replace_all(*input_column, *old_values_column, *new_values_column);
+  try {
+    column *input_column = reinterpret_cast<column *>(input_handle);
+    column *old_values_column = reinterpret_cast<column *>(old_values_handle);
+    column *new_values_column = reinterpret_cast<column *>(new_values_handle);
+
+    std::unique_ptr<column> result =
+        cudf::experimental::find_and_replace_all(input_column->view(), old_values_column->view(), new_values_column->view());
 
     return reinterpret_cast<jlong>(result.release());
   }

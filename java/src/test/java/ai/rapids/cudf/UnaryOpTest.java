@@ -27,7 +27,6 @@ public class UnaryOpTest extends CudfTestBase {
   private static final Double[] DOUBLES_1 = new Double[]{1.0, 10.0, -100.1, 5.3, 50.0, 100.0, null};
   private static final Integer[] INTS_1 = new Integer[]{1, 10, -100, 5, 50, 100, null};
   private static final Boolean[] BOOLEANS_1 = new Boolean[]{true, false, true, false, true, false, null};
-  private static final String[] STRINGS_1 = new String[]{"1", "10", "-100", "5", "50", "100", null};
 
   interface CpuOp {
     void computeNullSafe(ColumnVector.Builder ret, ColumnVector input, int index);
