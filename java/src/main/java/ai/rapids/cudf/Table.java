@@ -229,8 +229,8 @@ public final class Table implements AutoCloseable {
   private static native long[] gdfGroupByAggregate(long inputTable, int[] keyIndices, int[] aggColumnsIndices,
                                                    int[] aggTypes, boolean ignoreNullKeys) throws CudfException;
 
-  private static native long[] gdfOrderBy(long inputTable, long[] sortKeys, boolean[] isDescending,
-                                          boolean areNullsSmallest) throws CudfException;
+  private static native long[] orderBy(long inputTable, long[] sortKeys, boolean[] isDescending,
+                                       boolean[] areNullsSmallest) throws CudfException;
 
   private static native long[] gdfLeftJoin(long leftTable, int[] leftJoinCols, long rightTable,
                                            int[] rightJoinCols) throws CudfException;
@@ -241,8 +241,6 @@ public final class Table implements AutoCloseable {
   private static native long[] concatenate(long[] cudfTablePointers) throws CudfException;
 
   private static native long[] filter(long input, long mask);
-
-  private static native long sortedOrder(long input, boolean[] isDescending, boolean[] areNullsSmallest);
 
   private native long createCudfTableView(long[] nativeColumnHandles);
 
@@ -967,28 +965,26 @@ public final class Table implements AutoCloseable {
    * the {@link ColumnVector} returned as part of the output {@link Table}
    * <p>
    * Example usage: orderBy(true, Table.asc(0), Table.desc(3)...);
-   * @param areNullsSmallest - represents if nulls are to be considered smaller than non-nulls.
    * @param args             - Suppliers to initialize sortKeys.
    * @return Sorted Table
    */
-  public Table orderBy(boolean areNullsSmallest, OrderByArg... args) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
+  public Table orderBy(OrderByArg... args) {
     assert args.length <= columns.length;
     long[] sortKeys = new long[args.length];
     boolean[] isDescending = new boolean[args.length];
+    boolean[] areNullsSmallest = new boolean[args.length];
     for (int i = 0; i < args.length; i++) {
       int index = args[i].index;
       assert (index >= 0 && index < columns.length) :
           "index is out of range 0 <= " + index + " < " + columns.length;
       isDescending[i] = args[i].isDescending;
+      areNullsSmallest[i] = args[i].isNullSmallest;
       sortKeys[i] = columns[index].getNativeCudfColumnAddress();
     }
 
     try (DevicePrediction prediction = new DevicePrediction(getDeviceMemorySize(), "orderBy")) {
-      return new Table(gdfOrderBy(nativeHandle, sortKeys, isDescending, areNullsSmallest));
+      return new Table(orderBy(nativeHandle, sortKeys, isDescending, areNullsSmallest));
     }
-*/
   }
 
   public static OrderByArg asc(final int index) {
@@ -1498,46 +1494,5 @@ public final class Table implements AutoCloseable {
         }
       }
     }
-  }
-
-  /**
-   * Sort the table
-   * @param args
-   * @return
-   */
-  public ColumnVector sortedOrder(OrderByArg... args) {
-    assert args.length == columns.length || args.length == 0;
-    boolean[] isDescending = new boolean[args.length];
-    boolean[] isNullSmallest = new boolean[args.length];
-    for (int i = 0; i < args.length; i++) {
-      int index = args[i].index;
-      assert (index >= 0 && index < columns.length) :
-          "index is out of range 0 <= " + index + " < " + columns.length;
-      isDescending[i] = args[i].isDescending;
-      isNullSmallest[i] = args[i].isNullSmallest;
-    }
-
-    return new ColumnVector(sortedOrder(this.nativeHandle, isDescending, isNullSmallest));
-  }
-
-  /**
-   * Sort the table
-   * @param areNullSmallest
-   * @param args
-   * @return
-   */
-  public ColumnVector sortedOrder(boolean areNullSmallest, OrderByArg... args) {
-    assert args.length == columns.length || args.length == 0;
-    boolean[] isDescending = new boolean[args.length];
-    boolean[] isNullSmallest = new boolean[args.length];
-    for (int i = 0; i < args.length; i++) {
-      int index = args[i].index;
-      assert (index >= 0 && index < columns.length) :
-          "index is out of range 0 <= " + index + " < " + columns.length;
-      isDescending[i] = args[i].isDescending;
-      isNullSmallest[i] = areNullSmallest;
-    }
-
-    return new ColumnVector(sortedOrder(this.nativeHandle, isDescending, isNullSmallest));
   }
 }
