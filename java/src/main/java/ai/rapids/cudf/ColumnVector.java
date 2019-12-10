@@ -771,13 +771,9 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return - A new vector containing the old values replaced with new values
    */
   public ColumnVector findAndReplaceAll(ColumnVector oldValues, ColumnVector newValues) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert this.type != TypeId.STRING_CATEGORY : "STRING_CATEGORY isn't supported at this time";
     try (DevicePrediction prediction = new DevicePrediction(getDeviceMemorySize(), "findAndReplace")) {
       return new ColumnVector(findAndReplaceAll(oldValues.getNativeCudfColumnAddress(), newValues.getNativeCudfColumnAddress(), this.getNativeCudfColumnAddress()));
     }
-*/
   }
 
   /**
@@ -1838,17 +1834,17 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 
   private static native long castTo(long nativeHandle, int type);
 
-  /**
-   * Set a CuDF column given data and validity bitmask pointers, size, and datatype, and
-   * count of null (non-valid) elements
-   * @param cudfColumnHandle native handle of cudf::column.
-   * @param dataPtr          Pointer to data.
-   * @param valid            Pointer to validity bitmask for the data.
-   * @param size             Number of rows in the column.
-   * @param TypeId            Data type of the column.
-   * @param null_count       The number of non-valid elements in the validity bitmask.
-   * @param timeUnit         {@link TimeUnit}
-   */
+//  /**
+//   * Set a CuDF column given data and validity bitmask pointers, size, and datatype, and
+//   * count of null (non-valid) elements
+//   * @param cudfColumnHandle native handle of cudf::column.
+//   * @param dataPtr          Pointer to data.
+//   * @param valid            Pointer to validity bitmask for the data.
+//   * @param size             Number of rows in the column.
+//   * @param TypeId            Data type of the column.
+//   * @param null_count       The number of non-valid elements in the validity bitmask.
+//   * @param timeUnit         {@link TimeUnit}
+//   */
 //  private static native void cudfColumnViewAugmented(long cudfColumnHandle, long dataPtr,
 //                                                     long valid,
 //                                                     int size, int TypeId, int null_count,
@@ -1858,7 +1854,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 
 //  private native long[] split(long nativeHandle, long indices) throws CudfException;
 
-//  private native long findAndReplaceAll(long valuesHandle, long replaceHandle, long myself) throws CudfException;
+  private native long findAndReplaceAll(long valuesHandle, long replaceHandle, long myself) throws CudfException;
 
   /**
    * Translate the host side string representation of strings into the device side representation
