@@ -19,6 +19,7 @@
 #include <cudf/strings/strings_column_view.hpp>
 #include <cudf/transform.hpp>
 #include <cudf/types.hpp>
+#include <cudf/unary.hpp>
 
 #include "helper.cuh"
 #include "jni_utils.hpp"
@@ -73,7 +74,6 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_CudfColumn_makeTimestampCudfColumn(
   }
   CATCH_STD(env, 0);
 }
-
 
 JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_CudfColumn_makeStringCudfColumn(
     JNIEnv *env, jobject j_object, jlong j_char_data, jlong j_offset_data, jlong j_valid_data,
