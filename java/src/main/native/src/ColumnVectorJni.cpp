@@ -24,6 +24,7 @@
 #include "cudf/legacy/copying.hpp"
 #include "cudf/legacy/quantiles.hpp"
 #include "cudf/legacy/replace.hpp"
+#include "cudf/replace.hpp"
 #include "cudf/legacy/rolling.hpp"
 
 #include "cudf/column/column_view.hpp"
@@ -671,19 +672,15 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_findAndReplaceAll(JNIEn
   JNI_NULL_CHECK(env, new_values_handle, "replace column is null", 0);
   JNI_NULL_CHECK(env, input_handle, "input column is null", 0);
 
-  try {
-    gdf_column *input_column = reinterpret_cast<gdf_column *>(input_handle);
-    gdf_column *old_values_column = reinterpret_cast<gdf_column *>(old_values_handle);
-    gdf_column *new_values_column = reinterpret_cast<gdf_column *>(new_values_handle);
+  using cudf::column;
 
-    std::unique_ptr<gdf_column, decltype(free) *> result(
-        static_cast<gdf_column *>(calloc(1, sizeof(gdf_column))), free);
-    if (result.get() == nullptr) {
-      cudf::jni::throw_java_exception(env, "java/lang/OutOfMemoryError",
-                                      "Could not allocate native memory");
-    }
-    *result.get() =
-        cudf::find_and_replace_all(*input_column, *old_values_column, *new_values_column);
+  try {
+    column *input_column = reinterpret_cast<column *>(input_handle);
+    column *old_values_column = reinterpret_cast<column *>(old_values_handle);
+    column *new_values_column = reinterpret_cast<column *>(new_values_handle);
+
+    std::unique_ptr<column> result =
+        cudf::experimental::find_and_replace_all(input_column->view(), old_values_column->view(), new_values_column->view());
 
     return reinterpret_cast<jlong>(result.release());
   }

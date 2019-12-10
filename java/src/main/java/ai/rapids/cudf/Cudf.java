@@ -138,5 +138,5 @@ class Cudf {
   }
 
   private static native Scalar reduce(long v, int op, int dtype);
-
+  
 }
