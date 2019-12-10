@@ -139,12 +139,6 @@ class Cudf {
 
   private static native Scalar reduce(long v, int op, int dtype);
 
-  static long gdfCast(ColumnVector input, DType outType, TimeUnit outUnit) {
-    return gdfCast(input.getNativeCudfColumnAddress(), outType.nativeId, outUnit.getNativeId());
-  }
-
-  private static native long gdfCast(long input, int dTypeNative, int timeUnitNative) throws CudfException;
-
   static int getCategoryIndex(ColumnVector category, Scalar str) {
     return getCategoryIndex(category.getNativeCudfColumnAddress(), str.stringTypeStorage);
   }

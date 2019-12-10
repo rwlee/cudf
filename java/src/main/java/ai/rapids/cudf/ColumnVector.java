@@ -879,24 +879,18 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * Get the value at index.
    */
   public final long getLong(long index) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert type == TypeId.INT64 || type == TypeId.DATE64 || type == TypeId.TIMESTAMP;
+    assert type == DType.INT64 || type.hasTimeResolution();
     assertsForGet(index);
     return offHeap.getHostData().data.getLong(index * type.sizeInBytes);
-*/
   }
 
   /**
    * Get the value at index.
    */
   public final float getFloat(long index) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert type == TypeId.FLOAT32;
+    assert type == DType.FLOAT32;
     assertsForGet(index);
     return offHeap.getHostData().data.getFloat(index * type.sizeInBytes);
-*/
   }
 
   /**
@@ -1637,24 +1631,18 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
   /**
    * Generic method to cast ColumnVector
    * When casting from a Date, Timestamp, or Boolean to a numerical type the underlying numerical
-   * representationof the data will be used for the cast. In the cast of Timestamp this means the
-   * TimeUnit is ignored and lost.
-   * When casting between Date32, Date64, and Timestamp the units of time are used.
+   * representation of the data will be used for the cast.
    * @param type type of the resulting ColumnVector
-   * @param unit the unit of time, really only applicable for TIMESTAMP.
    * @return A new vector allocated on the GPU
    */
-  public ColumnVector castTo(DType type, TimeUnit unit) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    if (this.type == type && this.tsTimeUnit == unit) {
+  public ColumnVector castTo(DType type) {
+    if (this.type == type) {
       // Optimization
       return incRefCount();
     }
     try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(type), "cast")) {
-      return new ColumnVector(Cudf.gdfCast(this, type, unit));
+      return new ColumnVector(castTo(offHeap.cudfColumnHandle.nativeHandle, type.nativeId));
     }
-*/
   }
 
   /**
@@ -1665,8 +1653,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return A new vector allocated on the GPU
    */
   public ColumnVector asBytes() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return castTo(TypeId.INT8, TimeUnit.NONE);
+    return castTo(DType.INT8);
   }
 
   /**
@@ -1677,8 +1664,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return A new vector allocated on the GPU
    */
   public ColumnVector asShorts() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return castTo(TypeId.INT16, TimeUnit.NONE);
+    return castTo(DType.INT16);
   }
 
   /**
@@ -1689,8 +1675,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return A new vector allocated on the GPU
    */
   public ColumnVector asInts() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return castTo(TypeId.INT32, TimeUnit.NONE);
+    return castTo(DType.INT32);
   }
 
   /**
@@ -1701,8 +1686,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return A new vector allocated on the GPU
    */
   public ColumnVector asLongs() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return castTo(TypeId.INT64, TimeUnit.NONE);
+    return castTo(DType.INT64);
   }
 
   /**
@@ -1713,8 +1697,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return A new vector allocated on the GPU
    */
   public ColumnVector asFloats() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return castTo(TypeId.FLOAT32, TimeUnit.NONE);
+    return castTo(DType.FLOAT32);
   }
 
   /**
@@ -1725,60 +1708,52 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return A new vector allocated on the GPU
    */
   public ColumnVector asDoubles() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return castTo(TypeId.FLOAT64, TimeUnit.NONE);
+    return castTo(DType.FLOAT64);
   }
 
   /**
-   * Cast to Date32 - ColumnVector
-   * This method takes the value provided by the ColumnVector and casts to date32
+   * Cast to TIMESTAMP_DAYS - ColumnVector
+   * This method takes the value provided by the ColumnVector and casts to TIMESTAMP_DAYS
    * @return A new vector allocated on the GPU
    */
-  public ColumnVector asDate32() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return castTo(TypeId.DATE32, TimeUnit.NONE);
+  public ColumnVector asTimestampDays() {
+    return castTo(DType.TIMESTAMP_DAYS);
   }
 
   /**
-   * Cast to Date64 - ColumnVector
-   * This method takes the value provided by the ColumnVector and casts to date64
+   * Cast to TIMESTAMP_SECONDS - ColumnVector
+   * This method takes the value provided by the ColumnVector and casts to TIMESTAMP_SECONDS
    * @return A new vector allocated on the GPU
    */
-  public ColumnVector asDate64() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return castTo(TypeId.DATE64, TimeUnit.NONE);
+  public ColumnVector asTimestampSeconds() {
+    return castTo(DType.TIMESTAMP_SECONDS);
   }
 
   /**
-   * Cast to Timestamp - ColumnVector
-   * This method takes the value provided by the ColumnVectoor and casts to timestamp. Timestamp
-   * casting usually requires a time unit to be given as an argument, this defaults the
-   * argument to millisecond.
-   * @return A new vector allocoated on the GPU
-   */
-  public ColumnVector asTimestamp() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return asTimestamp(TimeUnit.MILLISECONDS);
-  }
-
-  /**
-   * Cast to Timestamp - ColumnVector
-   * This method takes the value provided by the ColumnVector and casts to timestamp.
-   * When used to convert strings to timestamp, "%Y-%m-%dT%H:%M:%SZ%f" is the format string used to
-   * parse the time -- see NVString documentation for symbol meaning and alternative format options.
-   * https://github.com/rapidsai/custrings/blob/branch-0.10/docs/source/datetime.md
-   * Strings that fail to parse will default to 0, corresponding to 1970-01-01 00:00:00.000.
-   * @param unit time unit to parse the timestamp into.
+   * Cast to TIMESTAMP_MICROSECONDS - ColumnVector
+   * This method takes the value provided by the ColumnVector and casts to TIMESTAMP_MICROSECONDS
    * @return A new vector allocated on the GPU
    */
-  public ColumnVector asTimestamp(TimeUnit unit) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    if (type == TypeId.STRING || type == TypeId.STRING_CATEGORY) {
-      return asTimestamp(unit, "%Y-%m-%dT%H:%M:%SZ%f");
-    }
-    return castTo(TypeId.TIMESTAMP, unit);
-*/
+  public ColumnVector asTimestampMicroseconds() {
+    return castTo(DType.TIMESTAMP_MICROSECONDS);
+  }
+
+  /**
+   * Cast to TIMESTAMP_MILLISECONDS - ColumnVector
+   * This method takes the value provided by the ColumnVector and casts to TIMESTAMP_MILLISECONDS.
+   * @return A new vector allocated on the GPU
+   */
+  public ColumnVector asTimestampMilliseconds() {
+    return castTo(DType.TIMESTAMP_MILLISECONDS);
+  }
+
+  /**
+   * Cast to TIMESTAMP_NANOSECONDS - ColumnVector
+   * This method takes the value provided by the ColumnVector and casts to TIMESTAMP_NANOSECONDS.
+   * @return A new vector allocated on the GPU
+   */
+  public ColumnVector asTimestampNanoseconds() {
+    return castTo(DType.TIMESTAMP_NANOSECONDS);
   }
 
   /**
@@ -1835,15 +1810,6 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
   public ColumnVector asStrings() {
     throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
 //    return castTo(TypeId.STRING, TimeUnit.NONE);
-  }
-
-  /**
-   * Cast to String Categories.
-   * @return A new vector allocated on the GPU.
-   */
-  public ColumnVector asStringCategories() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return castTo(TypeId.STRING_CATEGORY, TimeUnit.NONE);
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -1910,6 +1876,8 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 //  private static native long allocateCudfColumn() throws CudfException;
 
 //  private native static long cudfByteCount(long cudfColumnHandle) throws CudfException;
+
+  private static native long castTo(long nativeHandle, int type);
 
   /**
    * Set a CuDF column given data and validity bitmask pointers, size, and datatype, and
@@ -2352,16 +2320,14 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * Create a new vector from the given values.
    */
   public static ColumnVector fromBytes(byte... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.INT8, values.length, (b) -> b.appendArray(values));
+    return build(DType.INT8, values.length, (b) -> b.appendArray(values));
   }
 
   /**
    * Create a new vector from the given values.
    */
   public static ColumnVector fromShorts(short... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.INT16, values.length, (b) -> b.appendArray(values));
+    return build(DType.INT16, values.length, (b) -> b.appendArray(values));
   }
 
   /**
@@ -2375,24 +2341,21 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * Create a new vector from the given values.
    */
   public static ColumnVector fromLongs(long... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.INT64, values.length, (b) -> b.appendArray(values));
+    return build(DType.INT64, values.length, (b) -> b.appendArray(values));
   }
 
   /**
    * Create a new vector from the given values.
    */
   public static ColumnVector fromFloats(float... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.FLOAT32, values.length, (b) -> b.appendArray(values));
+    return build(DType.FLOAT32, values.length, (b) -> b.appendArray(values));
   }
 
   /**
    * Create a new vector from the given values.
    */
   public static ColumnVector fromDoubles(double... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.FLOAT64, values.length, (b) -> b.appendArray(values));
+    return build(DType.FLOAT64, values.length, (b) -> b.appendArray(values));
   }
 
   /**

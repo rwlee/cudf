@@ -20,8 +20,10 @@ package ai.rapids.cudf;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
+import static ai.rapids.cudf.DType.*;
 import static ai.rapids.cudf.QuantileMethod.*;
 import static ai.rapids.cudf.TableTest.assertColumnsAreEqual;
 import static org.junit.jupiter.api.Assertions.*;
@@ -624,10 +626,6 @@ public class ColumnVectorTest extends CudfTestBase {
   @Test
   void testEmptyStringColumnOpts() {
     try (ColumnVector cv = ColumnVector.fromStrings()) {
-      try (ColumnVector emptyCats = cv.asStringCategories()) {
-        assertEquals(0, emptyCats.getRowCount());
-      }
-
       try (ColumnVector len = cv.getLengths()) {
         assertEquals(0, len.getRowCount());
       }
@@ -851,6 +849,54 @@ public class ColumnVectorTest extends CudfTestBase {
         ColumnVector expectedVector = ColumnVector.fromFloats(7.3f, Float.NaN, 1.3f, 5.7f, 3f, 3f, 7.3f, 2.6f, Float.NaN, 0);
         ColumnVector newVector = vector.findAndReplaceAll(oldValues, replacedValues)) {
       assertColumnsAreEqual(expectedVector, newVector);
+    }
+  }
+
+  @Test
+  void testCast() {
+    int[] values = new int[]{1,3,4,5,2};
+    long[] longValues = Arrays.stream(values).asLongStream().toArray();
+    double[] doubleValues = Arrays.stream(values).asDoubleStream().toArray();
+    byte[] byteValues = new byte[values.length];
+    float[] floatValues = new float[values.length];
+    short[] shortValues = new short[values.length];
+    IntStream.range(0, values.length).forEach(i -> {
+      byteValues[i] = (byte)values[i];
+      floatValues[i] = (float)values[i];
+      shortValues[i] = (short)values[i];
+    });
+
+    try (ColumnVector cv = ColumnVector.fromInts(values);
+         ColumnVector expectedBytes = ColumnVector.fromBytes(byteValues);
+         ColumnVector bytes = cv.asBytes();
+         ColumnVector expectedFloats = ColumnVector.fromFloats(floatValues);
+         ColumnVector floats = cv.asFloats();
+         ColumnVector expectedDoubles = ColumnVector.fromDoubles(doubleValues);
+         ColumnVector doubles = cv.asDoubles();
+         ColumnVector expectedLongs = ColumnVector.fromLongs(longValues);
+         ColumnVector longs = cv.asLongs();
+         ColumnVector expectedShorts = ColumnVector.fromShorts(shortValues);
+         ColumnVector shorts = cv.asShorts();
+         ColumnVector expectedDays = ColumnVector.daysFromInts(values);
+         ColumnVector days = cv.asTimestampDays();
+         ColumnVector expectedUs = ColumnVector.timestampMicroSecondsFromLongs(longValues);
+         ColumnVector us = cv.asTimestampMicroseconds();
+         ColumnVector expectedNs = ColumnVector.timestampNanoSecondsFromLongs(longValues);
+         ColumnVector ns = cv.asTimestampNanoseconds();
+         ColumnVector expectedMs = ColumnVector.timestampMilliSecondsFromLongs(longValues);
+         ColumnVector ms = cv.asTimestampMilliseconds();
+         ColumnVector expectedS = ColumnVector.timestampSecondsFromLongs(longValues);
+         ColumnVector s = cv.asTimestampSeconds();) {
+      assertColumnsAreEqual(expectedBytes, bytes);
+      assertColumnsAreEqual(expectedShorts, shorts);
+      assertColumnsAreEqual(expectedLongs, longs);
+      assertColumnsAreEqual(expectedDoubles, doubles);
+      assertColumnsAreEqual(expectedFloats, floats);
+      assertColumnsAreEqual(expectedDays, days);
+      assertColumnsAreEqual(expectedUs, us);
+      assertColumnsAreEqual(expectedMs, ms);
+      assertColumnsAreEqual(expectedNs, ns);
+      assertColumnsAreEqual(expectedS, s);
     }
   }
 }

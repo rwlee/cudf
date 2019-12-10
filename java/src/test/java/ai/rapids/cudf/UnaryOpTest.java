@@ -238,20 +238,4 @@ public class UnaryOpTest extends CudfTestBase {
       assertColumnsAreEqual(expected, answer);
     }
   }
-
-  // String to string cat conversion has more to do with correctness as we wrote that all ourselves
-  @Test
-  public void testStringCastFullCircle() {
-    try (ColumnVector origStr = ColumnVector.fromStrings(STRINGS_1);
-         ColumnVector origCat = ColumnVector.categoryFromStrings(STRINGS_1);
-         ColumnVector cat = origStr.asStringCategories();
-         ColumnVector str = origCat.asStrings();
-         ColumnVector catAgain = str.asStringCategories();
-         ColumnVector strAgain = cat.asStrings()) {
-      assertColumnsAreEqual(origCat, cat);
-      assertColumnsAreEqual(origStr, str);
-      assertColumnsAreEqual(origCat, catAgain);
-      assertColumnsAreEqual(origStr, strAgain);
-    }
-  }
 }
