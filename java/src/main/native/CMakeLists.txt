@@ -204,8 +204,7 @@ set(SOURCE_FILES
     "src/NvtxRangeJni.cpp"
     "src/RmmJni.cpp"
     "src/TableJni.cpp"
-    "src/CudfColumnVectorJni.cpp"
-    "src/helper.cu")
+    "src/CudfColumnVectorJni.cpp")
 add_library(cudfjni SHARED ${SOURCE_FILES})
 
 #Override RPATH for cudfjni

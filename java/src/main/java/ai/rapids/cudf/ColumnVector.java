@@ -2275,8 +2275,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * Create a new vector from the given values.
    */
   public static ColumnVector boolFromBytes(byte... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.BOOL8, values.length, (b) -> b.appendArray(values));
+    return build(DType.BOOL8, values.length, (b) -> b.appendArray(values));
   }
 
   /**
@@ -2403,8 +2402,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * for tests.
    */
   public static ColumnVector fromBoxedBytes(Byte... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.INT8, values.length, (b) -> b.appendBoxed(values));
+    return build(DType.INT8, values.length, (b) -> b.appendBoxed(values));
   }
 
   /**

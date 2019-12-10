@@ -19,9 +19,8 @@
 #include <cudf/strings/strings_column_view.hpp>
 #include <cudf/transform.hpp>
 #include <cudf/types.hpp>
-#include <cudf/unary.hpp>
+#include <cudf/utilities/bit.hpp>
 
-#include "helper.cuh"
 #include "jni_utils.hpp"
 
 extern "C" {
@@ -84,14 +83,20 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_CudfColumn_makeStringCudfColumn(
   JNI_NULL_CHECK(env, j_offset_data, "offset is null", 0);
 
   try {
-    uint32_t *host_offsets = reinterpret_cast<uint32_t *>(j_offset_data);
+    cudf::size_type *host_offsets = reinterpret_cast<cudf::size_type *>(j_offset_data);
     char *n_char_data = reinterpret_cast<char *>(j_char_data);
-    uint32_t n_data_size = host_offsets[size];
-    std::vector<char> strings(n_char_data, n_char_data + n_data_size);
-    std::vector<cudf::size_type> offsets(host_offsets, host_offsets + size + 1);
+    cudf::size_type n_data_size = host_offsets[size];
+    cudf::bitmask_type *n_validity = reinterpret_cast<cudf::bitmask_type *>(j_valid_data);
 
-    std::unique_ptr<cudf::column> column = make_string(strings, offsets);
-    cudf::strings::print(cudf::strings_column_view(*column.get()));
+    rmm::device_vector<char> dev_char_data(n_char_data, n_char_data + n_data_size);
+    rmm::device_vector<cudf::size_type> dev_offsets(host_offsets, host_offsets + size + 1);
+    std::unique_ptr<cudf::column> column;
+    if (j_null_count == 0) {
+      column = cudf::make_strings_column(dev_char_data, dev_offsets);
+    } else {
+      rmm::device_vector<cudf::bitmask_type> dev_validity(n_validity, n_validity + cudf::word_index(size) + 1);
+      column = cudf::make_strings_column(dev_char_data, dev_offsets, dev_validity, j_null_count);
+    }
     return reinterpret_cast<jlong>(column.release());
   }
   CATCH_STD(env, 0);
