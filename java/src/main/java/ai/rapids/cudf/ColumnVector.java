@@ -303,11 +303,10 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return ColumnVector holding length of string at index 'i' in the original vector
    */
   public ColumnVector getLengths() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert TypeId.STRING == type : "length only available for String type";
-    return new ColumnVector(cudfLengths(getNativeCudfColumnAddress()));
-*/
+    assert DType.STRING == type : "length only available for String type";
+    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(DType.INT32), "getLengths")) {
+      return new ColumnVector(lengths(getNativeCudfColumnAddress()));
+    }
   }
 
   /**
@@ -385,13 +384,10 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return ColumnVector, where each element at i = byte count of string at index 'i' in the original vector
    */
   public ColumnVector getByteCount() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert type == TypeId.STRING : "type has to be a String";
-    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(TypeId.INT32), "byteCount")) {
-      return new ColumnVector(cudfByteCount(getNativeCudfColumnAddress()));
+    assert type == DType.STRING : "type has to be a String";
+    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(DType.INT32), "byteCount")) {
+      return new ColumnVector(byteCount(getNativeCudfColumnAddress()));
     }
-*/
   }
 
   /**
@@ -1838,7 +1834,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 
 //  private static native long allocateCudfColumn() throws CudfException;
 
-//  private native static long cudfByteCount(long cudfColumnHandle) throws CudfException;
+  private native static long byteCount(long cudfColumnHandle) throws CudfException;
 
   private static native long castTo(long nativeHandle, int type);
 
@@ -1944,7 +1940,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 //                                           int forward_window, int agg_type, long window_col,
 //                                           long min_periods_col, long forward_window_col);
 
-//  private static native long cudfLengths(long cudfColumnHandle) throws CudfException;
+  private static native long lengths(long cudfColumnHandle) throws CudfException;
 
 //  private static native long hash(long cudfColumnHandle, int nativeHashId) throws CudfException;
 
