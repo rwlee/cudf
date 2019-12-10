@@ -490,7 +490,12 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * Be sure the data is on the device.
    */
   public final void ensureOnDevice() {
-    if (offHeap.getDeviceData() == null && rows != 0) {
+    if (offHeap.cudfColumnHandle == null) {
+      if (rows == 0) {
+        offHeap.cudfColumnHandle = new CudfColumn(type, 0, MaskState.UNALLOCATED);
+        offHeap.setDeviceData(new BufferEncapsulator(null, null, null));
+        return;
+      }
       checkHasHostData();
 
       assert type != DType.STRING || offHeap.getHostData().offsets != null;

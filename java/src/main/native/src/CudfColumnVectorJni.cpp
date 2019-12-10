@@ -25,19 +25,32 @@
 
 extern "C" {
 
-JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_CudfColumn_makeNumericCudfColumn(
-    JNIEnv *env, jobject j_object, jint j_type, jint j_size, jint j_mask_state) {
-
-  JNI_NULL_CHECK(env, j_type, "type id is null", 0);
-  JNI_NULL_CHECK(env, j_size, "size is null", 0);
+JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_CudfColumn_makeEmptyCudfColumn(
+    JNIEnv *env, jobject j_object, jint j_type) {
 
   try {
     cudf::type_id n_type = static_cast<cudf::type_id>(j_type);
-    std::unique_ptr<cudf::data_type> n_data_type(new cudf::data_type(n_type));
+    cudf::data_type n_data_type(n_type);
+    std::unique_ptr<cudf::column> column(
+        cudf::make_empty_column(n_data_type));
+    return reinterpret_cast<jlong>(column.release());
+  }
+  CATCH_STD(env, 0);
+}
+
+
+JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_CudfColumn_makeNumericCudfColumn(
+    JNIEnv *env, jobject j_object, jint j_type, jint j_size, jint j_mask_state) {
+
+  JNI_ARG_CHECK(env, (j_size != 0), "size is 0", 0);
+
+  try {
+    cudf::type_id n_type = static_cast<cudf::type_id>(j_type);
+    cudf::data_type n_data_type(n_type);
     cudf::size_type n_size = static_cast<cudf::size_type>(j_size);
     cudf::mask_state n_mask_state = static_cast<cudf::mask_state>(j_mask_state);
     std::unique_ptr<cudf::column> column(
-        cudf::make_numeric_column(*n_data_type.get(), n_size, n_mask_state));
+        cudf::make_numeric_column(n_data_type, n_size, n_mask_state));
     return reinterpret_cast<jlong>(column.release());
   }
   CATCH_STD(env, 0);
@@ -66,6 +79,7 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_CudfColumn_makeStringCudfColumn(
     JNIEnv *env, jobject j_object, jlong j_char_data, jlong j_offset_data, jlong j_valid_data,
     jint j_null_count, jint size) {
 
+  JNI_ARG_CHECK(env, (size != 0), "size is 0", 0);
   JNI_NULL_CHECK(env, j_char_data, "char data is null", 0);
   JNI_NULL_CHECK(env, j_offset_data, "offset is null", 0);
 
