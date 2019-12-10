@@ -1617,6 +1617,20 @@ public class TableTest extends CudfTestBase {
   }
 
   @Test
+  void testMaskWithoutValidity() {
+    try (ColumnVector mask = ColumnVector.fromBoxedBooleans(true, false, true, false, true);
+         ColumnVector fromInts = ColumnVector.fromInts(1, 2, 3, 4, 5);
+         ColumnVector fromStrings = ColumnVector.fromStrings("1", "2", "3", "4", "5");
+         Table input = new Table(fromInts, fromStrings);
+         Table filteredTable = input.filter(mask);
+         ColumnVector expectedInts = ColumnVector.fromInts(1, 3, 5);
+         ColumnVector expectedStrings = ColumnVector.fromStrings("1", "3", "5");
+         Table expected = new Table(expectedInts, expectedStrings)) {
+      assertTablesAreEqual(expected, filteredTable);
+    }
+  }
+
+  @Test
   void testMaskWithValidity() {
     final int numRows = 5;
     try (ColumnVector.Builder builder = ColumnVector.builder(DType.BOOL8, numRows)) {
@@ -1693,7 +1707,7 @@ public class TableTest extends CudfTestBase {
   }
 
   @Test
-  void testMismatchedSizes() {
+  void testMismatchedSizesForFilter() {
     Boolean[] maskVals = new Boolean[3];
     Arrays.fill(maskVals, true);
     try (ColumnVector mask = ColumnVector.fromBoxedBooleans(maskVals);
@@ -1714,18 +1728,7 @@ public class TableTest extends CudfTestBase {
          ColumnVector expectedFromInts = ColumnVector.fromBoxedInts(null, 3, null);
          ColumnVector expectedFromStrings = ColumnVector.fromStrings("two", null, "five");
          Table expected = new Table(expectedFromInts, expectedFromStrings)) {
-      assertTablesAreEqual(filtered, expected);
-    }
-  }
-
-  @Test
-  void testStringsAreNotSupported() {
-    Boolean[] maskVals = new Boolean[5];
-    Arrays.fill(maskVals, true);
-    try (ColumnVector mask = ColumnVector.fromBoxedBooleans(maskVals);
-         ColumnVector fromStrings = ColumnVector.fromStrings("1","2","3","4","5");
-         Table input = new Table(fromStrings)) {
-      assertThrows(AssertionError.class, () -> input.filter(mask).close());
+      assertTablesAreEqual(expected, filtered);
     }
   }
 

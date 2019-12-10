@@ -147,14 +147,11 @@ public final class Table implements AutoCloseable {
    * Returns the Device memory buffer size.
    */
   public long getDeviceMemorySize() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     long total = 0;
     for (ColumnVector cv: columns) {
       total += cv.getDeviceMemorySize();
     }
     return total;
-*/
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -243,7 +240,7 @@ public final class Table implements AutoCloseable {
 
   private static native long[] concatenate(long[] cudfTablePointers) throws CudfException;
 
-  private static native long[] gdfFilter(long input, long mask);
+  private static native long[] filter(long input, long mask);
 
   private static native long sortedOrder(long input, boolean[] isDescending, boolean[] areNullsSmallest);
 
@@ -1094,17 +1091,11 @@ public final class Table implements AutoCloseable {
    * the filter defined by the boolean mask
    */
   public Table filter(ColumnVector mask) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     assert mask.getType() == DType.BOOL8 : "Mask column must be of type BOOL8";
     assert getRowCount() == 0 || getRowCount() == mask.getRowCount() : "Mask column has incorrect size";
-    for (ColumnVector col : getColumns()){
-      assert col.getType() != DType.STRING : "STRING type must be converted to a STRING_CATEGORY for filter";
-    }
     try (DevicePrediction prediction = new DevicePrediction(getDeviceMemorySize(), "filter")) {
-      return new Table(gdfFilter(nativeHandle, mask.getNativeCudfColumnAddress()));
+      return new Table(filter(nativeHandle, mask.getNativeCudfColumnAddress()));
     }
-*/
   }
 
   /////////////////////////////////////////////////////////////////////////////
