@@ -67,21 +67,23 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
     offHeap.setHostData(null);
     this.rows = offHeap.cudfColumnHandle.getNativeRowCount();
     this.nullCount = offHeap.cudfColumnHandle.getNativeNullCount();
-    DeviceMemoryBufferView data = null;
-    DeviceMemoryBufferView offsets = null;
-    if (type != DType.STRING) {
-      data = new DeviceMemoryBufferView(offHeap.cudfColumnHandle.getNativeDataPointer(), this.rows * type.sizeInBytes);
-    } else {
-      long[] dataAndOffsets = CudfColumn.getStringDataAndOffsets(getNativeCudfColumnAddress());
-      data = new DeviceMemoryBufferView(dataAndOffsets[0], dataAndOffsets[1]);
-      offsets = new DeviceMemoryBufferView(dataAndOffsets[2], dataAndOffsets[3]);
+    if (this.rows != 0) {
+      DeviceMemoryBufferView data = null;
+      DeviceMemoryBufferView offsets = null;
+      if (type != DType.STRING) {
+        data = new DeviceMemoryBufferView(offHeap.cudfColumnHandle.getNativeDataPointer(), this.rows * type.sizeInBytes);
+      } else {
+        long[] dataAndOffsets = CudfColumn.getStringDataAndOffsets(getNativeCudfColumnAddress());
+        data = new DeviceMemoryBufferView(dataAndOffsets[0], dataAndOffsets[1]);
+        offsets = new DeviceMemoryBufferView(dataAndOffsets[2], dataAndOffsets[3]);
+      }
+      DeviceMemoryBufferView valid = null;
+      long validPointer = offHeap.cudfColumnHandle.getNativeValidPointer();
+      if (validPointer != 0) {
+        valid = new DeviceMemoryBufferView(validPointer, CudfColumn.getNativeValidPointerSize((int) rows));
+      }
+      this.offHeap.setDeviceData(new BufferEncapsulator<>(data, valid, offsets));
     }
-    DeviceMemoryBufferView valid = null;
-    long validPointer = offHeap.cudfColumnHandle.getNativeValidPointer();
-    if (validPointer != 0) {
-      valid = new DeviceMemoryBufferView(validPointer, CudfColumn.getNativeValidPointerSize((int) rows));
-    }
-    this.offHeap.setDeviceData(new BufferEncapsulator<>(data, valid, offsets));
     this.refCount = 0;
     incRefCountInternal(true);
     MemoryListener.deviceAllocation(getDeviceMemorySize(), internalId);
