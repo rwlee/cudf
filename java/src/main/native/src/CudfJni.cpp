@@ -17,7 +17,6 @@
 #include <memory>
 
 #include "cudf/legacy/binaryop.hpp"
-#include "cudf/legacy/filling.hpp"
 #include "cudf/legacy/reduction.hpp"
 #include "cudf/legacy/stream_compaction.hpp"
 #include "cudf/legacy/unary.hpp"
@@ -207,23 +206,6 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_Cudf_gdfCast(JNIEnv *env, jclass, jl
     }
   }
   CATCH_STD(env, 0);
-}
-
-JNIEXPORT void JNICALL Java_ai_rapids_cudf_Cudf_fill(JNIEnv *env, jclass, jlong input_jcol,
-                                                     jlong s_int_values, jfloat s_f_value,
-                                                     jdouble s_d_value, jboolean s_is_valid,
-                                                     int s_dtype) {
-  JNI_NULL_CHECK(env, input_jcol, "input column is null", );
-  try {
-    gdf_column *input = reinterpret_cast<gdf_column *>(input_jcol);
-    gdf_scalar fill_value{};
-//    cudf::jni::gdf_scalar_init(&fill_value, s_int_values, s_f_value, s_d_value, s_is_valid,
-//                               s_dtype);
-    throw std::logic_error("BAD IMPLEMENTATION");
-
-    cudf::fill(input, fill_value, 0, input->size);
-  }
-  CATCH_STD(env, );
 }
 
 JNIEXPORT jobject JNICALL Java_ai_rapids_cudf_Cudf_reduce(JNIEnv *env, jclass, jlong jcol, jint jop,

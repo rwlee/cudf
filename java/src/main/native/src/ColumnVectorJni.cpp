@@ -15,8 +15,10 @@
  */
 
 #include <cudf/column/column.hpp>
+#include <cudf/column/column_factories.hpp>
 #include <cudf/column/column_view.hpp>
 #include <cudf/datetime.hpp>
+#include <cudf/filling.hpp>
 #include <cudf/replace.hpp>
 #include <cudf/strings/attributes.hpp>
 #include <cudf/strings/strings_column_view.hpp>
@@ -445,6 +447,35 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_concatenate(JNIEnv *env
       outcol->dtype_info.time_unit = columns[0]->dtype_info.time_unit;
     }
     return reinterpret_cast<jlong>(outcol.release());
+  }
+  CATCH_STD(env, 0);
+}
+
+JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_fromScalar(JNIEnv *env, jclass,
+    jlong j_scalar, jint row_count) {
+  JNI_NULL_CHECK(env, j_scalar, "scalar is null", 0);
+  try {
+    auto scalar_val = reinterpret_cast<cudf::scalar const*>(j_scalar);
+    auto dtype = scalar_val->type();
+    cudf::mask_state mask_state = scalar_val->is_valid() ? cudf::mask_state::UNALLOCATED : cudf::mask_state::ALL_NULL;
+    std::unique_ptr<cudf::column> col;
+    if (row_count == 0) {
+      col = cudf::make_empty_column(dtype);
+    } else if (cudf::is_fixed_width(dtype)) {
+      col = cudf::make_fixed_width_column(dtype, row_count, mask_state);
+      cudf::experimental::fill(col->mutable_view(), 0, row_count, *scalar_val);
+    } else if (dtype.id() == cudf::type_id::STRING) {
+      // create a string column of all empty strings to fill (cheapest string column to create)
+      auto offsets = cudf::make_numeric_column(cudf::data_type{cudf::INT32}, row_count + 1, cudf::mask_state::UNALLOCATED);
+      auto data = cudf::make_empty_column(cudf::data_type{cudf::INT8});
+      auto mask_buffer = cudf::create_null_mask(row_count, cudf::UNALLOCATED);
+      auto str_col = cudf::make_strings_column(row_count, std::move(offsets), std::move(data), 0, std::move(mask_buffer));
+
+      col = cudf::experimental::fill(str_col->view(), 0, row_count, *scalar_val);
+    } else {
+      JNI_THROW_NEW(env, "java/lang/IllegalArgumentException", "Invalid data type", 0);
+    }
+    return reinterpret_cast<jlong>(col.release());
   }
   CATCH_STD(env, 0);
 }

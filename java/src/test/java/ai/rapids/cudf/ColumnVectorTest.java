@@ -23,7 +23,6 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
-import static ai.rapids.cudf.DType.*;
 import static ai.rapids.cudf.QuantileMethod.*;
 import static ai.rapids.cudf.TableTest.assertColumnsAreEqual;
 import static org.junit.jupiter.api.Assertions.*;
@@ -203,76 +202,203 @@ public class ColumnVectorTest extends CudfTestBase {
   }
 
   @Test
-  void testFromScalarProducesEmptyColumn() {
-    try (ColumnVector input = ColumnVector.fromScalar(Scalar.fromInt(1), 0);
-         ColumnVector expected = ColumnVector.fromBoxedInts()) {
-      assertColumnsAreEqual(input, expected);
+  void testFromScalarZeroRows() {
+    for (DType type : DType.values()) {
+      Scalar s = null;
+      try {
+        switch (type) {
+        case BOOL8:
+          s = Scalar.fromBool(true);
+          break;
+        case INT8:
+          s = Scalar.fromByte((byte) 5);
+          break;
+        case INT16:
+          s = Scalar.fromShort((short) 12345);
+          break;
+        case INT32:
+          s = Scalar.fromInt(123456789);
+          break;
+        case INT64:
+          s = Scalar.fromLong(1234567890123456789L);
+          break;
+        case FLOAT32:
+          s = Scalar.fromFloat(1.2345f);
+          break;
+        case FLOAT64:
+          s = Scalar.fromDouble(1.23456789);
+          break;
+        case TIMESTAMP_DAYS:
+          s = Scalar.timestampDaysFromInt(12345);
+          break;
+        case TIMESTAMP_SECONDS:
+        case TIMESTAMP_MILLISECONDS:
+        case TIMESTAMP_MICROSECONDS:
+        case TIMESTAMP_NANOSECONDS:
+          s = Scalar.timestampFromLong(type, 1234567890123456789L);
+          break;
+        case STRING:
+          s = Scalar.fromString("hello, world!");
+          break;
+        case EMPTY:
+        case CATEGORY:
+          continue;
+        default:
+          throw new IllegalArgumentException("Unexpected type: " + type);
+        }
+
+        try (ColumnVector c = ColumnVector.fromScalar(s, 0)) {
+          assertEquals(type, c.getType());
+          assertEquals(0, c.getRowCount());
+          assertEquals(0, c.getNullCount());
+        }
+      } finally {
+        if (s != null) {
+          s.close();
+        }
+      }
     }
   }
 
   @Test
-  void testFromScalarFloat() {
-    try (ColumnVector input = ColumnVector.fromScalar(Scalar.fromFloat(1.123f), 4);
-         ColumnVector expected = ColumnVector.fromBoxedFloats(1.123f, 1.123f, 1.123f, 1.123f)) {
-      assertColumnsAreEqual(input, expected);
+  void testFromScalar() {
+    final int rowCount = 4;
+    for (DType type : DType.values()) {
+      Scalar s = null;
+      ColumnVector expected = null;
+      ColumnVector result = null;
+      try {
+        switch (type) {
+        case BOOL8:
+          s = Scalar.fromBool(true);
+          expected = ColumnVector.fromBoxedBooleans(true, true, true, true);
+          break;
+        case INT8: {
+          byte v = (byte) 5;
+          s = Scalar.fromByte(v);
+          expected = ColumnVector.fromBoxedBytes(v, v, v, v);
+          break;
+        }
+        case INT16: {
+          short v = (short) 12345;
+          s = Scalar.fromShort(v);
+          expected = ColumnVector.fromBoxedShorts((short) 12345, (short) 12345, (short) 12345, (short) 12345);
+          break;
+        }
+        case INT32: {
+          int v = 123456789;
+          s = Scalar.fromInt(v);
+          expected = ColumnVector.fromBoxedInts(v, v, v, v);
+          break;
+        }
+        case INT64: {
+          long v = 1234567890123456789L;
+          s = Scalar.fromLong(v);
+          expected = ColumnVector.fromBoxedLongs(v, v, v, v);
+          break;
+        }
+        case FLOAT32: {
+          float v = 1.2345f;
+          s = Scalar.fromFloat(v);
+          expected = ColumnVector.fromBoxedFloats(v, v, v, v);
+          break;
+        }
+        case FLOAT64: {
+          double v = 1.23456789;
+          s = Scalar.fromDouble(v);
+          expected = ColumnVector.fromBoxedDoubles(v, v, v, v);
+          break;
+        }
+        case TIMESTAMP_DAYS: {
+          int v = 12345;
+          s = Scalar.timestampDaysFromInt(v);
+          expected = ColumnVector.daysFromInts(v, v, v, v);
+          break;
+        }
+        case TIMESTAMP_SECONDS: {
+          long v = 1234567890123456789L;
+          s = Scalar.timestampFromLong(type, v);
+          expected = ColumnVector.timestampSecondsFromLongs(v, v, v, v);
+          break;
+        }
+        case TIMESTAMP_MILLISECONDS: {
+          long v = 1234567890123456789L;
+          s = Scalar.timestampFromLong(type, v);
+          expected = ColumnVector.timestampMilliSecondsFromLongs(v, v, v, v);
+          break;
+        }
+        case TIMESTAMP_MICROSECONDS: {
+          long v = 1234567890123456789L;
+          s = Scalar.timestampFromLong(type, v);
+          expected = ColumnVector.timestampMicroSecondsFromLongs(v, v, v, v);
+          break;
+        }
+        case TIMESTAMP_NANOSECONDS: {
+          long v = 1234567890123456789L;
+          s = Scalar.timestampFromLong(type, v);
+          expected = ColumnVector.timestampNanoSecondsFromLongs(v, v, v, v);
+          break;
+        }
+        case STRING: {
+          String v = "hello, world!";
+          s = Scalar.fromString(v);
+          expected = ColumnVector.fromStrings(v, v, v, v);
+          break;
+        }
+        case EMPTY:
+        case CATEGORY:
+          continue;
+        default:
+          throw new IllegalArgumentException("Unexpected type: " + type);
+        }
+
+        result = ColumnVector.fromScalar(s, rowCount);
+        assertColumnsAreEqual(expected, result);
+      } finally {
+        if (s != null) {
+          s.close();
+        }
+        if (expected != null) {
+          expected.close();
+        }
+        if (result != null) {
+          result.close();
+        }
+      }
     }
   }
 
   @Test
-  void testFromNullScalarInteger() {
-    try (Scalar s = Scalar.fromNull(DType.INT32);
-         ColumnVector input = ColumnVector.fromScalar(s, 6);
-         ColumnVector expected = ColumnVector.fromBoxedInts(null, null, null, null, null, null)) {
-      assertEquals(input.getNullCount(), expected.getNullCount());
-      assertColumnsAreEqual(input, expected);
+  void testFromScalarNull() {
+    final int rowCount = 4;
+    for (DType type : DType.values()) {
+      if (type == DType.EMPTY || type == DType.CATEGORY) {
+        continue;
+      }
+      try (Scalar s = Scalar.fromNull(type);
+           ColumnVector c = ColumnVector.fromScalar(s, rowCount)) {
+        assertEquals(type, c.getType());
+        assertEquals(rowCount, c.getRowCount());
+        assertEquals(rowCount, c.getNullCount());
+        c.ensureOnHost();
+        for (int i = 0; i < rowCount; ++i) {
+          assertTrue(c.isNull(i));
+        }
+      }
     }
   }
 
   @Test
-  void testSetToNullScalarInteger() {
-    try (Scalar s = Scalar.fromInt(123);
-         ColumnVector input = ColumnVector.fromScalar(s, 6);
-         ColumnVector expected = ColumnVector.fromBoxedInts(null, null, null, null, null, null);
-         Scalar nullScalar = Scalar.fromNull(DType.INT32)) {
-      input.fill(nullScalar);
-      assertEquals(input.getNullCount(), expected.getNullCount());
-      assertColumnsAreEqual(input, expected);
-    }
-  }
-
-  @Test
-  void testSetToNullScalarByte() {
+  void testFromScalarNullByte() {
     int numNulls = 3000;
     try (Scalar s = Scalar.fromNull(DType.INT8);
          ColumnVector input = ColumnVector.fromScalar(s, numNulls)) {
+      assertEquals(numNulls, input.getRowCount());
       assertEquals(input.getNullCount(), numNulls);
       input.ensureOnHost();
       for (int i = 0; i < numNulls; i++){
         assertTrue(input.isNull(i));
       }
-    }
-  }
-
-  @Test
-  void testSetToNullThenBackScalarByte() {
-    int numNulls = 3000;
-    try (Scalar nullScalar = Scalar.fromNull(DType.INT8);
-         ColumnVector input = ColumnVector.fromScalar(nullScalar, numNulls);
-         Scalar s = Scalar.fromByte((byte)5)) {
-      assertEquals(input.getNullCount(), numNulls);
-      input.fill(s);
-      assertEquals(input.getNullCount(), 0);
-      input.ensureOnHost();
-      for (int i = 0; i < numNulls; i++){
-        assertFalse(input.isNull(i));
-      }
-    }
-  }
-
-  @Test
-  void testFromScalarStringThrows() {
-    try (Scalar s = Scalar.fromString("test")) {
-      assertThrows(IllegalArgumentException.class, () -> ColumnVector.fromScalar(s, 1));
     }
   }
 
