@@ -104,13 +104,10 @@ public class Schema {
     private List<DType> types = new ArrayList<>();
 
     public Builder column(DType type, String name) {
-      throw new UnsupportedOperationException(ColumnVector.STANDARD_CUDF_PORTING_MSG);
-/*
       types.add(type);
       typeNames.add(type.simpleName);
       names.add(name);
       return this;
-*/
     }
 
     public Schema build() {
