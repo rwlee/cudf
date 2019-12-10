@@ -103,10 +103,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *) {
     return JNI_ERR;
   }
 
-  // cache some class/method/field lookups
-  if (!cudf::jni::cache_scalar_jni(env)) {
-    return JNI_ERR;
-  }
+  // cache any class objects and method IDs here
 
   return cudf::jni::MINIMUM_JNI_VERSION;
 }
@@ -117,7 +114,7 @@ JNIEXPORT void JNI_OnUnload(JavaVM *vm, void *) {
     return;
   }
 
-  cudf::jni::release_scalar_jni(env);
+  // release cached class objects here.
 }
 
 JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_Cudf_gdfBinaryOpVV(JNIEnv *env, jclass, jlong lhs_ptr,

@@ -35,10 +35,6 @@
 namespace cudf {
 namespace jni {
 
-bool cache_scalar_jni(JNIEnv* env);
-void release_scalar_jni(JNIEnv* env);
-jobject jscalar_from_scalar(JNIEnv *env, cudf::scalar const& scalar);
-
 /**
  * @brief indicates that a JNI error of some kind was thrown and the main
  * function should return.

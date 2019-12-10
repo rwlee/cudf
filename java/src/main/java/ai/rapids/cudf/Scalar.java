@@ -255,7 +255,7 @@ public final class Scalar implements AutoCloseable, BinaryOperable {
    * Returns the scalar value as UTF-8 data.
    */
   public byte[] getUTF8() {
-    return getJavaString().getBytes(StandardCharsets.UTF_8);
+    return getUTF8(getScalarHandle());
   }
 
   @Override

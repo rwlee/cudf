@@ -17,62 +17,6 @@
 #include <cudf/scalar/scalar_factories.hpp>
 #include "jni_utils.hpp"
 
-#define SCALAR_CLASS "ai/rapids/cudf/Scalar"
-#define SCALAR_FACTORY_SIG(param_sig) "(" param_sig ")L" SCALAR_CLASS ";"
-
-namespace cudf {
-namespace jni {
-
-namespace {
-
-jclass Scalar_jclass;
-jmethodID Scalar_from_native;
-
-} // anonymous namespace
-
-// Cache useful method IDs of the Scalar class along with a global reference
-// to the class. This avoids redundant, dynamic class and method lookups later.
-// Returns true if the class and method IDs were successfully cached or false
-// if an error occurred.
-bool cache_scalar_jni(JNIEnv* env) {
-  jclass cls = env->FindClass(SCALAR_CLASS);
-  if (cls == nullptr) {
-    return false;
-  }
-
-  Scalar_from_native = env->GetStaticMethodID(cls, "fromNative", SCALAR_FACTORY_SIG("IJ"));
-  if (Scalar_from_native == nullptr) {
-    return false;
-  }
-
-  // Convert local reference to global so it cannot be garbage collected.
-  Scalar_jclass = static_cast<jclass>(env->NewGlobalRef(cls));
-  if (Scalar_jclass == nullptr) {
-    return false;
-  }
-
-  return true;
-}
-
-void release_scalar_jni(JNIEnv* env) {
-  if (Scalar_jclass != nullptr) {
-    env->DeleteGlobalRef(Scalar_jclass);
-    Scalar_jclass = nullptr;
-  }
-}
-
-jobject jscalar_from_scalar(JNIEnv* env, cudf::scalar const& scalar_val) {
-  return env->CallStaticObjectMethod(
-      Scalar_jclass,
-      Scalar_from_native,
-      static_cast<jint>(scalar_val.type().id()),
-      reinterpret_cast<jlong>(&scalar_val));
-}
-
-} // namespace jni
-} // namespace cudf
-
-
 extern "C" {
 
 JNIEXPORT void JNICALL Java_ai_rapids_cudf_Scalar_closeScalar(JNIEnv* env, jclass, jlong scalar_handle) {
