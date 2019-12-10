@@ -22,6 +22,7 @@
 #include <cudf/table/table.hpp>
 #include <cudf/stream_compaction.hpp>
 #include <cudf/io/functions.hpp>
+#include <cudf/copying.hpp>
 
 #include "cudf/utilities/legacy/nvcategory_util.hpp"
 #include "cudf/legacy/copying.hpp"
@@ -101,17 +102,18 @@ JNIEXPORT void JNICALL Java_ai_rapids_cudf_Table_deleteCudfTable(JNIEnv *env, jc
   delete reinterpret_cast<cudf::table_view*>(j_cudf_table_view);
 }
 
-JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_Table_gdfOrderBy(
+JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_Table_orderBy(
     JNIEnv *env, jclass j_class_object, jlong j_input_table, jlongArray j_sort_keys_gdfcolumns,
-    jbooleanArray j_is_descending, jboolean j_are_nulls_smallest) {
+    jbooleanArray j_is_descending, jbooleanArray j_are_nulls_smallest) {
 
   // input validations & verifications
   JNI_NULL_CHECK(env, j_input_table, "input table is null", NULL);
   JNI_NULL_CHECK(env, j_sort_keys_gdfcolumns, "input table is null", NULL);
   JNI_NULL_CHECK(env, j_is_descending, "sort order array is null", NULL);
+  JNI_NULL_CHECK(env, j_are_nulls_smallest, "null order array is null", NULL);
 
   try {
-    cudf::jni::native_jpointerArray<gdf_column> n_sort_keys_gdfcolumns(env, j_sort_keys_gdfcolumns);
+    cudf::jni::native_jpointerArray<cudf::column> n_sort_keys_gdfcolumns(env, j_sort_keys_gdfcolumns);
     jsize num_columns = n_sort_keys_gdfcolumns.size();
     const cudf::jni::native_jbooleanArray n_is_descending(env, j_is_descending);
     jsize num_columns_is_desc = n_is_descending.size();
@@ -121,45 +123,36 @@ JNIEXPORT jlongArray JNICALL Java_ai_rapids_cudf_Table_gdfOrderBy(
                     "columns and is_descending lengths don't match", NULL);
     }
 
-    auto is_descending = cudf::jni::copy_to_device(env, n_is_descending);
+    const cudf::jni::native_jbooleanArray n_are_nulls_smallest(env, j_are_nulls_smallest);
+    jsize num_columns_null_smallest = n_are_nulls_smallest.size();
 
-    cudf::table *input_table = reinterpret_cast<cudf::table *>(j_input_table);
-    cudf::jni::output_table output(env, input_table, true);
+    if (num_columns_null_smallest != num_columns) {
+      JNI_THROW_NEW(env, "java/lang/IllegalArgumentException",
+                    "columns and areNullsSmallest lengths don't match", NULL);
+    }
 
-    bool are_nulls_smallest = static_cast<bool>(j_are_nulls_smallest);
+    std::vector<cudf::order> order(n_is_descending.size());
+    for (int i = 0; i < n_is_descending.size(); i++) {
+      order[i] = n_is_descending[i] ? cudf::order::DESCENDING : cudf::order::ASCENDING;
+    }
+    std::vector<cudf::null_order> null_order(n_are_nulls_smallest.size());
+    for (int i = 0; i < n_are_nulls_smallest.size(); i++) {
+      null_order[i] = n_are_nulls_smallest[i] ? cudf::null_order::BEFORE : cudf::null_order::AFTER;
+    }
 
-    auto col_data = cudf::jni::jni_rmm_alloc<int32_t>(
-        env, n_sort_keys_gdfcolumns[0]->size * sizeof(int32_t), 0);
+    std::vector<cudf::column_view> columns;
+    columns.reserve(num_columns);
+    for (int i = 0; i < num_columns; i++) {
+      columns.push_back(n_sort_keys_gdfcolumns[i]->view());
+    }
+    cudf::table_view keys(columns);
 
-    gdf_column intermediate_output;
-    // construct column view
-    cudf::jni::jni_cudf_check(env, gdf_column_view(&intermediate_output, col_data.get(), nullptr,
-                                                   n_sort_keys_gdfcolumns[0]->size,
-                                                   gdf_dtype::GDF_INT32));
+    auto sorted_col = cudf::experimental::sorted_order(keys, order, null_order);
 
-    gdf_context context{};
-    // Most of these are probably ignored, but just to be safe
-    context.flag_sorted = false;
-    context.flag_method = GDF_SORT;
-    context.flag_distinct = 0;
-    context.flag_sort_result = 1;
-    context.flag_sort_inplace = 0;
-    context.flag_groupby_include_nulls = true;
-    // There is also a MULTI COLUMN VERSION, that we may want to support in the
-    // future.
-    context.flag_null_sort_behavior =
-        j_are_nulls_smallest ? GDF_NULL_AS_SMALLEST : GDF_NULL_AS_LARGEST;
-
-    cudf::jni::jni_cudf_check(env, gdf_order_by(n_sort_keys_gdfcolumns.data(), is_descending.get(),
-                                                static_cast<size_t>(num_columns),
-                                                &intermediate_output, &context));
-
-    cudf::table *cudf_table = output.get_cudf_table();
-
-    // gather handles string categories
-    gather(input_table, col_data.get(), cudf_table);
-
-    return output.get_native_handles_and_release();
+    cudf::table_view *input_table = reinterpret_cast<cudf::table_view *>(j_input_table);
+    std::unique_ptr<cudf::experimental::table> result = cudf::experimental::gather(*input_table,
+            sorted_col->view());
+    return cudf::jni::convert_table_for_return(env, result);
   }
   CATCH_STD(env, NULL);
 }
@@ -762,27 +755,4 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_Table_gdfBound(JNIEnv *env, jclass,
   CATCH_STD(env, 0);
 }
 
-JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_Table_sortedOrder(
-    JNIEnv *env, jclass clazz, jlong j_input_table_view, jbooleanArray j_is_descending,
-    jbooleanArray j_are_nulls_smallest) {
-
-  JNI_NULL_CHECK(env, j_input_table_view, "input table is null", 0);
-  JNI_NULL_CHECK(env, j_are_nulls_smallest, "null size passed as null", 0);
-  try {
-    const cudf::jni::native_jbooleanArray n_is_descending(env, j_is_descending);
-    std::vector<cudf::order> order(n_is_descending.size());
-    for (int i = 0; i < n_is_descending.size(); i++) {
-      order[i] = n_is_descending[i] ? cudf::order::DESCENDING : cudf::order::ASCENDING;
-    }
-    const cudf::jni::native_jbooleanArray n_are_nulls_smallest(env, j_are_nulls_smallest);
-    std::vector<cudf::null_order> null_order(n_are_nulls_smallest.size());
-    for (int i = 0; i < n_are_nulls_smallest.size(); i++) {
-      null_order[i] = n_are_nulls_smallest[i] ? cudf::null_order::BEFORE : cudf::null_order::AFTER;
-    }
-    cudf::table_view *n_input_table_view = reinterpret_cast<cudf::table_view *>(j_input_table_view);
-    auto sorted_col = cudf::experimental::sorted_order(*n_input_table_view, order, null_order);
-    return reinterpret_cast<jlong>(sorted_col.release());
-  }
-  CATCH_STD(env, 0);
-}
 } // extern "C"

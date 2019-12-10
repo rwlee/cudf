@@ -187,7 +187,7 @@ public class TableTest extends CudfTestBase {
              .column(2, 1, 4, 3, 5)
              .column(9, 7, 5, 3, 1)
              .build();
-         Table sortedTable = table.orderBy(false, Table.asc(0), Table.desc(1))) {
+         Table sortedTable = table.orderBy(Table.asc(0), Table.desc(1))) {
       assertTablesAreEqual(expected, sortedTable);
     }
   }
@@ -204,7 +204,7 @@ public class TableTest extends CudfTestBase {
              .column(5, 4, 3, 2, 1)
              .column(1, 5, 3, 9, 7)
              .build();
-         Table sortedTable = table.orderBy(false, Table.desc(0), Table.desc(1))) {
+         Table sortedTable = table.orderBy(Table.desc(0), Table.desc(1))) {
       assertTablesAreEqual(expected, sortedTable);
     }
   }
@@ -223,7 +223,7 @@ public class TableTest extends CudfTestBase {
              .column("1", "0", "2", "4", "3")
              .column(7, 9, 5, 1, 3)
              .build();
-         Table sortedTable = table.orderBy(false, Table.asc(0), Table.desc(1))) {
+         Table sortedTable = table.orderBy(Table.asc(0), Table.desc(1))) {
       assertTablesAreEqual(expected, sortedTable);
     }
   }
@@ -242,7 +242,7 @@ public class TableTest extends CudfTestBase {
              .column(null, null, 4, 3, 5)
              .column(9, 7, 5, 3, 1)
              .build();
-         Table sortedTable = table.orderBy(false, Table.asc(0))) {
+         Table sortedTable = table.orderBy(Table.asc(0))) {
       assertTablesAreEqual(expected, sortedTable);
     }
   }
@@ -636,7 +636,7 @@ public class TableTest extends CudfTestBase {
              .column(null, null, 203, null, null, null, null, 201, 202, 204) // right
              .build();
          Table joinedTable = leftTable.onColumns(0).leftJoin(rightTable.onColumns(0));
-         Table orderedJoinedTable = joinedTable.orderBy(true, Table.asc(1))) {
+         Table orderedJoinedTable = joinedTable.orderBy(Table.asc(1, true))) {
       assertTablesAreEqual(expected, orderedJoinedTable);
     }
   }
@@ -652,7 +652,7 @@ public class TableTest extends CudfTestBase {
              .column( 20,  21,  22,  23,  24,  25,  26,  27,  28,  29)
              .build();
          Table joinedTable = leftTable.onColumns(0).leftJoin(rightTable.onColumns(new int[]{0}));
-         Table orderedJoinedTable = joinedTable.orderBy(true, Table.asc(1));
+         Table orderedJoinedTable = joinedTable.orderBy(Table.asc(1, true));
          Table expected = new Table.TestBuilder()
              .column(360, 326, 254, 306, 109, 361, 251, 335, 301, 317) // common
              .column( 10,  11,  12,  13,  14,  15,  16,  17,  18,  19) // left
@@ -678,7 +678,7 @@ public class TableTest extends CudfTestBase {
              .column(202, 200, 201, 203) // right
              .build();
          Table joinedTable = leftTable.onColumns(0).innerJoin(rightTable.onColumns(0));
-         Table orderedJoinedTable = joinedTable.orderBy(true, Table.asc(1))) {
+         Table orderedJoinedTable = joinedTable.orderBy(Table.asc(1, true))) {
       assertTablesAreEqual(expected, orderedJoinedTable);
     }
   }
@@ -694,7 +694,7 @@ public class TableTest extends CudfTestBase {
              .column(200, 201, 202, 203, 204, 205, 206, 207, 208, 209)
              .build();
          Table joinedTable = leftTable.onColumns(0).innerJoin(rightTable.onColumns(new int[]{0}));
-         Table orderedJoinedTable = joinedTable.orderBy(true, Table.asc(1));
+         Table orderedJoinedTable = joinedTable.orderBy(Table.asc(1, true));
          Table expected = new Table.TestBuilder()
              .column(360, 326, 254, 306, 109, 361, 251, 335, 301, 317) // common
              .column(100, 101, 102, 103, 104, 105, 106, 107, 108, 109) // left
@@ -1296,7 +1296,7 @@ public class TableTest extends CudfTestBase {
                                            .column(   1,    1,    1, null,    1,    1)
                                            .build()) {
       try (Table t3 = t1.groupBy(0).aggregate(count(1), count(2), count(3))
-            .orderBy(true, Table.asc(0))) {
+            .orderBy(Table.asc(0, true))) {
         // verify t3
         assertEquals(2, t3.getRowCount());
 
@@ -1344,7 +1344,7 @@ public class TableTest extends CudfTestBase {
           .build();
 
       try (Table t3 = t1.groupBy(options, 0).aggregate(count(1), count(2), count(3))
-          .orderBy(true, Table.asc(0))) {
+          .orderBy(Table.asc(0, true))) {
         // (null, 1) => became (1) because we are ignoring nulls
         assertEquals(1, t3.getRowCount());
 
@@ -1423,7 +1423,7 @@ public class TableTest extends CudfTestBase {
              .column(12.0, 13.0, 15.0, 18.0).build()) {
       try (Table t3 = t1.groupBy(0, 1)
           .aggregate(max(2), min(2), min(2), max(2), min(2));
-          Table t4 = t3.orderBy(false, Table.asc(2))) {
+          Table t4 = t3.orderBy(Table.asc(2))) {
         // verify t4
         assertEquals(4, t4.getRowCount());
         assertTablesAreEqual(t4, expected);
