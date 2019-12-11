@@ -120,10 +120,9 @@ public class ColumnVectorTest extends CudfTestBase {
 
   @Test
   void testConcaTimestamps() {
-    try (ColumnVector v0 = ColumnVector.timestampsFromBoxedLongs(TimeUnit.MICROSECONDS, 0L, 1L, 2L, null);
-         ColumnVector v1 = ColumnVector.timestampsFromBoxedLongs(TimeUnit.MICROSECONDS, null, 5L, 6L, 7L);
-         ColumnVector expected = ColumnVector.timestampsFromBoxedLongs(
-           TimeUnit.MICROSECONDS,
+    try (ColumnVector v0 = ColumnVector.timestampMicroSecondsFromBoxedLongs(0L, 1L, 2L, null);
+         ColumnVector v1 = ColumnVector.timestampMicroSecondsFromBoxedLongs(null, 5L, 6L, 7L);
+         ColumnVector expected = ColumnVector.timestampMicroSecondsFromBoxedLongs(
            0L, 1L, 2L, null,
            null, 5L, 6L, 7L);
          ColumnVector v = ColumnVector.concatenate(v0, v1)) {

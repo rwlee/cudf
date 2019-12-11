@@ -284,7 +284,7 @@ class ReductionTest extends CudfTestBase {
   @ParameterizedTest
   @MethodSource("createDate32Params")
   void testDate32(ReductionOp op, Integer[] values, Scalar expected) {
-    try (ColumnVector v = ColumnVector.datesFromBoxedInts(values)) {
+    try (ColumnVector v = ColumnVector.timestampDaysFromBoxedInts(values)) {
       Scalar result = v.reduce(op, expected.type);
       assertEquals(expected, result);
     }
@@ -293,7 +293,7 @@ class ReductionTest extends CudfTestBase {
   @ParameterizedTest
   @MethodSource("createDate64Params")
   void testDate64(ReductionOp op, Long[] values, Scalar expected) {
-    try (ColumnVector v = ColumnVector.datesFromBoxedLongs(values)) {
+    try (ColumnVector v = ColumnVector.timestampMilliSecondsFromBoxedLongs(values)) {
       Scalar result = v.reduce(op, expected.type);
       assertEquals(expected, result);
     }
@@ -302,9 +302,11 @@ class ReductionTest extends CudfTestBase {
   @ParameterizedTest
   @MethodSource("createTimestampParams")
   void testTimestamp(ReductionOp op, Long[] values, TimeUnit timeUnit, Scalar expected) {
-    try (ColumnVector v = ColumnVector.timestampsFromBoxedLongs(timeUnit, values)) {
-      Scalar result = v.reduce(op, expected.type);
-      assertEquals(expected, result);
-    }
+    fail();
+    //TODO need to work out how to do this properly with no TimeUnit
+//    try (ColumnVector v = ColumnVector.timestampMilliSecondsFromBoxedLongs(timeUnit, values)) {
+//      Scalar result = v.reduce(op, expected.type);
+//      assertEquals(expected, result);
+//    }
   }
 }
