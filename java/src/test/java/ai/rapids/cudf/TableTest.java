@@ -940,32 +940,29 @@ public class TableTest extends CudfTestBase {
 
   @Test
   void testConcatNoNulls() {
-    fail();
-/*
     try (Table t1 = new Table.TestBuilder()
         .column(1, 2, 3)
         .column("1", "2", "3")
-        .timestampColumn(TimeUnit.MICROSECONDS, 1L, 2L, 3L)
+        .timestampMicrosecondsColumn(1L, 2L, 3L)
         .column(11.0, 12.0, 13.0).build();
          Table t2 = new Table.TestBuilder()
              .column(4, 5)
              .column("4", "3")
-             .timestampColumn(TimeUnit.MICROSECONDS, 4L, 3L)
+             .timestampMicrosecondsColumn(4L, 3L)
              .column(14.0, 15.0).build();
          Table t3 = new Table.TestBuilder()
              .column(6, 7, 8, 9)
              .column("4", "1", "2", "2")
-             .timestampColumn(TimeUnit.MICROSECONDS, 4L, 1L, 2L, 2L)
+             .timestampMicrosecondsColumn(4L, 1L, 2L, 2L)
              .column(16.0, 17.0, 18.0, 19.0).build();
          Table concat = Table.concatenate(t1, t2, t3);
          Table expected = new Table.TestBuilder()
              .column(1, 2, 3, 4, 5, 6, 7, 8, 9)
              .column("1", "2", "3", "4", "3", "4", "1", "2", "2")
-             .timestampColumn(TimeUnit.MICROSECONDS, 1L, 2L, 3L, 4L, 3L, 4L, 1L, 2L, 2L)
+             .timestampMicrosecondsColumn(1L, 2L, 3L, 4L, 3L, 4L, 1L, 2L, 2L)
              .column(11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0).build()) {
       assertTablesAreEqual(expected, concat);
     }
-*/
   }
 
   @Test
