@@ -790,17 +790,15 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 
   /**
    * Returns a ColumnVector with any null values replaced with a scalar.
+   * The types of the input ColumnVector and Scalar must match, else an error is thrown.
    *
    * @param scalar - Scalar value to use as replacement
    * @return - ColumnVector with nulls replaced by scalar
    */
   public ColumnVector replaceNulls(Scalar scalar) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     try (DevicePrediction prediction = new DevicePrediction(getDeviceMemorySize(), "replaceNulls")) {
-      return new ColumnVector(Cudf.replaceNulls(this, scalar));
+      return new ColumnVector(replaceNulls(getNativeCudfColumnAddress(), scalar.getScalarHandle()));
     }
-*/
   }
 
   /**
@@ -1978,6 +1976,8 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 //  private static native int getDeviceMemoryStringSize(long cudfColumnHandle) throws CudfException;
 
 //  private static native long concatenate(long[] columnHandles) throws CudfException;
+
+  private static native long replaceNulls(long columnHandle, long scalarHandle) throws CudfException;
 
   private static native long isNullNative(long nativeHandle);
 

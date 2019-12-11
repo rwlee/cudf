@@ -220,7 +220,8 @@ public class ColumnVectorTest extends CudfTestBase {
 
   @Test
   void testFromNullScalarInteger() {
-    try (ColumnVector input = ColumnVector.fromScalar(Scalar.fromNull(DType.INT32), 6);
+    try (Scalar s = Scalar.fromNull(DType.INT32);
+         ColumnVector input = ColumnVector.fromScalar(s, 6);
          ColumnVector expected = ColumnVector.fromBoxedInts(null, null, null, null, null, null)) {
       assertEquals(input.getNullCount(), expected.getNullCount());
       assertColumnsAreEqual(input, expected);
@@ -229,9 +230,11 @@ public class ColumnVectorTest extends CudfTestBase {
 
   @Test
   void testSetToNullScalarInteger() {
-    try (ColumnVector input = ColumnVector.fromScalar(Scalar.fromInt(123), 6);
-         ColumnVector expected = ColumnVector.fromBoxedInts(null, null, null, null, null, null)) {
-      input.fill(Scalar.fromNull(DType.INT32));
+    try (Scalar s = Scalar.fromInt(123);
+         ColumnVector input = ColumnVector.fromScalar(s, 6);
+         ColumnVector expected = ColumnVector.fromBoxedInts(null, null, null, null, null, null);
+         Scalar nullScalar = Scalar.fromNull(DType.INT32)) {
+      input.fill(nullScalar);
       assertEquals(input.getNullCount(), expected.getNullCount());
       assertColumnsAreEqual(input, expected);
     }
@@ -240,7 +243,8 @@ public class ColumnVectorTest extends CudfTestBase {
   @Test
   void testSetToNullScalarByte() {
     int numNulls = 3000;
-    try (ColumnVector input = ColumnVector.fromScalar(Scalar.fromNull(DType.INT8), numNulls)) {
+    try (Scalar s = Scalar.fromNull(DType.INT8);
+         ColumnVector input = ColumnVector.fromScalar(s, numNulls)) {
       assertEquals(input.getNullCount(), numNulls);
       input.ensureOnHost();
       for (int i = 0; i < numNulls; i++){
@@ -252,9 +256,11 @@ public class ColumnVectorTest extends CudfTestBase {
   @Test
   void testSetToNullThenBackScalarByte() {
     int numNulls = 3000;
-    try (ColumnVector input = ColumnVector.fromScalar(Scalar.fromNull(DType.INT8), numNulls)) {
+    try (Scalar nullScalar = Scalar.fromNull(DType.INT8);
+         ColumnVector input = ColumnVector.fromScalar(nullScalar, numNulls);
+         Scalar s = Scalar.fromByte((byte)5)) {
       assertEquals(input.getNullCount(), numNulls);
-      input.fill(Scalar.fromByte((byte)5));
+      input.fill(s);
       assertEquals(input.getNullCount(), 0);
       input.ensureOnHost();
       for (int i = 0; i < numNulls; i++){
@@ -265,15 +271,17 @@ public class ColumnVectorTest extends CudfTestBase {
 
   @Test
   void testFromScalarStringThrows() {
-    assertThrows(IllegalArgumentException.class, () ->
-      ColumnVector.fromScalar(Scalar.fromString("test"), 1));
+    try (Scalar s = Scalar.fromString("test")) {
+      assertThrows(IllegalArgumentException.class, () -> ColumnVector.fromScalar(s, 1));
+    }
   }
 
   @Test
   void testReplaceEmptyColumn() {
     try (ColumnVector input = ColumnVector.fromBoxedBooleans();
          ColumnVector expected = ColumnVector.fromBoxedBooleans();
-         ColumnVector result = input.replaceNulls(Scalar.fromBool(false))) {
+         Scalar s = Scalar.fromBool(false);
+         ColumnVector result = input.replaceNulls(s)) {
       assertColumnsAreEqual(result, expected);
     }
   }
@@ -282,7 +290,8 @@ public class ColumnVectorTest extends CudfTestBase {
   void testReplaceNullBoolsWithAllNulls() {
     try (ColumnVector input = ColumnVector.fromBoxedBooleans(null, null, null, null);
          ColumnVector expected = ColumnVector.fromBoxedBooleans(false, false, false, false);
-         ColumnVector result = input.replaceNulls(Scalar.fromBool(false))) {
+         Scalar s = Scalar.fromBool(false);
+         ColumnVector result = input.replaceNulls(s)) {
       assertColumnsAreEqual(result, expected);
     }
   }
@@ -291,7 +300,8 @@ public class ColumnVectorTest extends CudfTestBase {
   void testReplaceSomeNullBools() {
     try (ColumnVector input = ColumnVector.fromBoxedBooleans(false, null, null, false);
          ColumnVector expected = ColumnVector.fromBoxedBooleans(false, true, true, false);
-         ColumnVector result = input.replaceNulls(Scalar.fromBool(true))) {
+         Scalar s = Scalar.fromBool(true);
+         ColumnVector result = input.replaceNulls(s)) {
       assertColumnsAreEqual(result, expected);
     }
   }
@@ -300,7 +310,8 @@ public class ColumnVectorTest extends CudfTestBase {
   void testReplaceNullIntegersWithAllNulls() {
     try (ColumnVector input = ColumnVector.fromBoxedInts(null, null, null, null);
          ColumnVector expected = ColumnVector.fromBoxedInts(0, 0, 0, 0);
-         ColumnVector result = input.replaceNulls(Scalar.fromInt(0))) {
+         Scalar s = Scalar.fromInt(0);
+         ColumnVector result = input.replaceNulls(s)) {
       assertColumnsAreEqual(result, expected);
     }
   }
@@ -309,32 +320,26 @@ public class ColumnVectorTest extends CudfTestBase {
   void testReplaceSomeNullIntegers() {
     try (ColumnVector input = ColumnVector.fromBoxedInts(1, 2, null, 4, null);
          ColumnVector expected = ColumnVector.fromBoxedInts(1, 2, 999, 4, 999);
-         ColumnVector result = input.replaceNulls(Scalar.fromInt(999))) {
+         Scalar s = Scalar.fromInt(999);
+         ColumnVector result = input.replaceNulls(s)) {
       assertColumnsAreEqual(result, expected);
     }
   }
 
   @Test
   void testReplaceNullsFailsOnTypeMismatch() {
-    try (ColumnVector input = ColumnVector.fromBoxedInts(1, 2, null, 4, null)) {
-      assertThrows(CudfException.class, () -> {
-        long nativePtr = Cudf.replaceNulls(input, Scalar.fromBool(true));
-        if (nativePtr != 0) {
-          new ColumnVector(nativePtr).close();
-        }
-      });
+    try (ColumnVector input = ColumnVector.fromBoxedInts(1, 2, null, 4, null);
+         Scalar s = Scalar.fromBool(true)) {
+      assertThrows(CudfException.class, () -> input.replaceNulls(s).close());
     }
   }
 
   @Test
-  void testReplaceNullsFailsOnNullScalar() {
-    try (ColumnVector input = ColumnVector.fromBoxedInts(1, 2, null, 4, null)) {
-      assertThrows(CudfException.class, () -> {
-        long nativePtr = Cudf.replaceNulls(input, Scalar.fromNull(input.getType()));
-        if (nativePtr != 0) {
-          new ColumnVector(nativePtr).close();
-        }
-      });
+  void testReplaceNullsWithNullScalar() {
+    try (ColumnVector input = ColumnVector.fromBoxedInts(1, 2, null, 4, null);
+         Scalar s = Scalar.fromNull(input.getType());
+         ColumnVector result = input.replaceNulls(s)) {
+      assertColumnsAreEqual(input, result);
     }
   }
 
