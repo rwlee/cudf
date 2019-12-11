@@ -2448,9 +2448,8 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * but is much slower than using a regular array and should really only be used
    * for tests.
    */
-  public static ColumnVector datesFromBoxedInts(Integer... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.DATE32, values.length, (b) -> b.appendBoxed(values));
+  public static ColumnVector timestampDaysFromBoxedInts(Integer... values) {
+    return build(DType.TIMESTAMP_DAYS, values.length, (b) -> b.appendBoxed(values));
   }
 
   /**
@@ -2458,9 +2457,8 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * but is much slower than using a regular array and should really only be used
    * for tests.
    */
-  public static ColumnVector datesFromBoxedLongs(Long... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.DATE64, values.length, (b) -> b.appendBoxed(values));
+  public static ColumnVector timestampSecondsFromBoxedLongs(Long... values) {
+    return build(DType.TIMESTAMP_SECONDS, values.length, (b) -> b.appendBoxed(values));
   }
 
   /**
@@ -2468,9 +2466,8 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * but is much slower than using a regular array and should really only be used
    * for tests.
    */
-  public static ColumnVector timestampsFromBoxedLongs(Long... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.TIMESTAMP, values.length, (b) -> b.appendBoxed(values));
+  public static ColumnVector timestampMilliSecondsFromBoxedLongs(Long... values) {
+    return build(DType.TIMESTAMP_MILLISECONDS, values.length, (b) -> b.appendBoxed(values));
   }
 
   /**
@@ -2478,9 +2475,17 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * but is much slower than using a regular array and should really only be used
    * for tests.
    */
-  public static ColumnVector timestampsFromBoxedLongs(TimeUnit tsTimeUnit, Long... values) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return build(TypeId.TIMESTAMP, tsTimeUnit, values.length, (b) -> b.appendBoxed(values));
+  public static ColumnVector timestampMicroSecondsFromBoxedLongs(Long... values) {
+    return build(DType.TIMESTAMP_MICROSECONDS, values.length, (b) -> b.appendBoxed(values));
+  }
+
+  /**
+   * Create a new vector from the given values.  This API supports inline nulls,
+   * but is much slower than using a regular array and should really only be used
+   * for tests.
+   */
+  public static ColumnVector timestampNanoSecondsFromBoxedLongs(Long... values) {
+    return build(DType.TIMESTAMP_NANOSECONDS, values.length, (b) -> b.appendBoxed(values));
   }
 
   /**

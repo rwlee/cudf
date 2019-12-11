@@ -133,14 +133,11 @@ public final class Table implements AutoCloseable {
 
   @Override
   public String toString() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     return "Table{" +
         "columns=" + Arrays.toString(columns) +
         ", cudfTable=" + nativeHandle +
         ", rows=" + rows +
         '}';
-*/
   }
 
   /**
@@ -242,6 +239,9 @@ public final class Table implements AutoCloseable {
 
   private static native long[] filter(long input, long mask);
 
+  //XXX until we have split a ColumnVector into a host column and a device column
+  // caching the table_view is a bug, as we could drop the device data which would
+  // invalidate everything that the table_view is pointing at on the device.
   private native long createCudfTableView(long[] nativeColumnHandles);
 
   /////////////////////////////////////////////////////////////////////////////
@@ -815,8 +815,6 @@ public final class Table implements AutoCloseable {
    * across all tables and will determine the schema of the resulting table.
    */
   public static Table concatenate(Table... tables) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     if (tables.length < 2) {
       throw new IllegalArgumentException("concatenate requires 2 or more tables");
     }
@@ -831,7 +829,6 @@ public final class Table implements AutoCloseable {
     try (DevicePrediction prediction = new DevicePrediction(amount, "concat")) {
       return new Table(concatenate(tableHandles));
     }
-*/
   }
 
   /**
@@ -1434,9 +1431,20 @@ public final class Table implements AutoCloseable {
           ret = ColumnVector.fromBoxedLongs((Long[]) dataArray);
           break;
         case TIMESTAMP_DAYS:
-          throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//          ret = ColumnVector.timestampsFromBoxedLongs(unit, (Long[]) dataArray);
-//          break;
+          ret = ColumnVector.timestampDaysFromBoxedInts((Integer[]) dataArray);
+          break;
+        case TIMESTAMP_SECONDS:
+          ret = ColumnVector.timestampSecondsFromBoxedLongs((Long[]) dataArray);
+          break;
+        case TIMESTAMP_MILLISECONDS:
+          ret = ColumnVector.timestampMilliSecondsFromBoxedLongs((Long[]) dataArray);
+          break;
+        case TIMESTAMP_MICROSECONDS:
+          ret = ColumnVector.timestampMicroSecondsFromBoxedLongs((Long[]) dataArray);
+          break;
+        case TIMESTAMP_NANOSECONDS:
+          ret = ColumnVector.timestampNanoSecondsFromBoxedLongs((Long[]) dataArray);
+          break;
         case FLOAT32:
           ret = ColumnVector.fromBoxedFloats((Float[]) dataArray);
           break;

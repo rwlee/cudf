@@ -276,7 +276,7 @@ class ReductionTest extends CudfTestBase {
   @MethodSource("createTimestampDaysParams")
   void testTimestampDays(ReductionOp op, Integer[] values, Object expectedObject) {
     try (Scalar expected = buildExpectedScalar(op, DType.TIMESTAMP_DAYS, expectedObject);
-         ColumnVector v = ColumnVector.datesFromBoxedInts(values);
+         ColumnVector v = ColumnVector.timestampDaysFromBoxedInts(values);
          Scalar result = v.reduce(op, expected.getType())) {
       assertEquals(expected, result);
     }
@@ -286,7 +286,7 @@ class ReductionTest extends CudfTestBase {
   @MethodSource("createTimestampResolutionParams")
   void testTimestampSeconds(ReductionOp op, Long[] values, Object expectedObject) {
     try (Scalar expected = buildExpectedScalar(op, DType.TIMESTAMP_SECONDS, expectedObject);
-         ColumnVector v = ColumnVector.datesFromBoxedLongs(values);
+         ColumnVector v = ColumnVector.timestampSecondsFromBoxedLongs(values);
          Scalar result = v.reduce(op, expected.getType())) {
       assertEquals(expected, result);
     }
@@ -296,7 +296,7 @@ class ReductionTest extends CudfTestBase {
   @MethodSource("createTimestampResolutionParams")
   void testTimestampMilliseconds(ReductionOp op, Long[] values, Object expectedObject) {
     try (Scalar expected = buildExpectedScalar(op, DType.TIMESTAMP_MILLISECONDS, expectedObject);
-         ColumnVector v = ColumnVector.datesFromBoxedLongs(values);
+         ColumnVector v = ColumnVector.timestampMilliSecondsFromBoxedLongs(values);
          Scalar result = v.reduce(op, expected.getType())) {
       assertEquals(expected, result);
     }
@@ -306,7 +306,7 @@ class ReductionTest extends CudfTestBase {
   @MethodSource("createTimestampResolutionParams")
   void testTimestampMicroseconds(ReductionOp op, Long[] values, Object expectedObject) {
     try (Scalar expected = buildExpectedScalar(op, DType.TIMESTAMP_MICROSECONDS, expectedObject);
-         ColumnVector v = ColumnVector.datesFromBoxedLongs(values);
+         ColumnVector v = ColumnVector.timestampMicroSecondsFromBoxedLongs(values);
          Scalar result = v.reduce(op, expected.getType())) {
       assertEquals(expected, result);
     }
@@ -316,7 +316,7 @@ class ReductionTest extends CudfTestBase {
   @MethodSource("createTimestampResolutionParams")
   void testTimestampNanoseconds(ReductionOp op, Long[] values, Object expectedObject) {
     try (Scalar expected = buildExpectedScalar(op, DType.TIMESTAMP_NANOSECONDS, expectedObject);
-         ColumnVector v = ColumnVector.datesFromBoxedLongs(values);
+         ColumnVector v = ColumnVector.timestampNanoSecondsFromBoxedLongs(values);
          Scalar result = v.reduce(op, expected.getType())) {
       assertEquals(expected, result);
     }
