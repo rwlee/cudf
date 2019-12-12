@@ -568,66 +568,6 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_getDeviceMemoryStringSi
   CATCH_STD(env, 0);
 }
 
-JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_hash(JNIEnv *env, jclass clazz,
-                                                              jlong column_handle, jint hash_type) {
-  JNI_NULL_CHECK(env, column_handle, "input column is null", 0);
-  try {
-    gdf_column *n_column = reinterpret_cast<gdf_column *>(column_handle);
-    gdf_hash_func hash_func = static_cast<gdf_hash_func>(hash_type);
-
-    if (n_column->dtype == GDF_STRING) {
-      cudf::jni::gdf_column_wrapper result(n_column->size, gdf_dtype::GDF_INT32,
-                                           n_column->null_count != 0);
-
-      if (n_column->size > 0) {
-        NVStrings *strings = static_cast<NVStrings *>(n_column->data);
-        JNI_ARG_CHECK(env, n_column->size == strings->size(),
-                      "NVStrings size and gdf_column size mismatch", 0);
-        strings->hash(static_cast<unsigned int *>(result->data));
-        if (n_column->null_count > 0) {
-          CUDA_TRY(cudaMemcpy(result->valid, n_column->valid,
-                              gdf_num_bitmask_elements(n_column->size), cudaMemcpyDeviceToDevice));
-          result->null_count = n_column->null_count;
-        }
-      }
-      return reinterpret_cast<jlong>(result.release());
-    } else if (n_column->dtype == GDF_STRING_CATEGORY) {
-      if (n_column->size <= 0) {
-        // special case for empty column
-        cudf::jni::gdf_column_wrapper result(n_column->size, gdf_dtype::GDF_INT32,
-                                             n_column->null_count != 0);
-        return reinterpret_cast<jlong>(result.release());
-      }
-      // Do the operation on the dictionary
-      NVCategory *cats = static_cast<NVCategory *>(n_column->dtype_info.category);
-      unique_nvstr_ptr keys(cats->get_keys(), &NVStrings::destroy);
-      unsigned int dict_size = keys->size();
-
-      cudf::jni::gdf_column_wrapper dict_result(dict_size, gdf_dtype::GDF_INT32, false);
-      keys->hash(static_cast<unsigned int *>(dict_result->data));
-
-      // Now we need to gather the data to a final answer
-      cudf::jni::gdf_column_wrapper result = gather_mutated_category(dict_result.get(), n_column);
-      
-
-      return reinterpret_cast<jlong>(result.release());
-    } else { // all others
-      cudf::jni::gdf_column_wrapper result(n_column->size, gdf_dtype::GDF_INT32,
-                                           n_column->null_count > 0);
-      CUDF_TRY(gdf_hash(1, &n_column, hash_func, nullptr, result.get()));
-      if (n_column->null_count > 0) {
-        gdf_column *result_ptr = result.get();
-        CUDA_TRY(cudaMemcpy(result_ptr->valid, n_column->valid,
-                            gdf_num_bitmask_elements(n_column->size), cudaMemcpyDeviceToDevice));
-        result_ptr->null_count = n_column->null_count;
-      }
-
-      return reinterpret_cast<jlong>(result.release());
-    }
-  }
-  CATCH_STD(env, 0);
-}
-
 JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_findAndReplaceAll(JNIEnv *env,
                                                                            jclass clazz,
                                                                            jlong old_values_handle,

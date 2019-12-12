@@ -1298,13 +1298,12 @@ public final class Table implements AutoCloseable {
     }
 
     /**
-     * Partitions a table based on the number of partitions provided.
+     * Hash partition a table into the specified number of partitions.
      * @param numberOfPartitions - number of partitions to use
-     * @param hashFunction       - hash function to use to partition
      * @return - {@link PartitionedTable} - Table that exposes a limited functionality of the
      * {@link Table} class
      */
-    public PartitionedTable partition(int numberOfPartitions, HashFunction hashFunction) {
+    public PartitionedTable partition(int numberOfPartitions) {
       throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
 /*
       int[] partitionOffsets = new int[numberOfPartitions];

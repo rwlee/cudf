@@ -312,52 +312,6 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
   }
 
   /**
-   * Compute the 32 bit hash of a vector.
-   *
-   * @return the 32 bit hash.
-   */
-  public ColumnVector hash() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(TypeId.INT32), "hash")) {
-      return new ColumnVector(hash(getNativeCudfColumnAddress(), HashFunction.MURMUR3.nativeId));
-    }
-*/
-  }
-
-  /**
-   * Compute a specific hash of a vector. String are not supported, if you need a hash of a string,
-   * you can use the generic hash, which does not guarantee what kind of hash is used.
-   * @param func the has function to use.
-   * @return the 32 bit hash.
-   */
-  public ColumnVector hash(HashFunction func) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert type != TypeId.STRING && type != TypeId.STRING_CATEGORY : "Strings are not supported for specific hash functions";
-    try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(TypeId.INT32), "hash")) {
-      return new ColumnVector(hash(getNativeCudfColumnAddress(), func.nativeId));
-    }
-*/
-  }
-
-  /**
-   * Compute the MURMUR3 hash of the column. Strings are not supported.
-   */
-  public ColumnVector murmur3() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return hash(HashFunction.MURMUR3);
-  }
-
-  /**
-   * Compute the IDENTITY hash of the column. Strings are not supported.
-   */
-  public ColumnVector identityHash() {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-//    return hash(HashFunction.IDENTITY);
-  }
-
-  /**
    * Returns the type of this vector.
    */
   @Override
@@ -1892,8 +1846,6 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 //                                           long min_periods_col, long forward_window_col);
 
   private static native long lengths(long cudfColumnHandle) throws CudfException;
-
-//  private static native long hash(long cudfColumnHandle, int nativeHashId) throws CudfException;
 
   /**
    * Copy the string data to the host.  This is a little ugly because the addresses
