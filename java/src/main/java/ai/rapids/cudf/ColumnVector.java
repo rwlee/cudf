@@ -67,21 +67,23 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
     offHeap.setHostData(null);
     this.rows = offHeap.cudfColumnHandle.getNativeRowCount();
     this.nullCount = offHeap.cudfColumnHandle.getNativeNullCount();
-    DeviceMemoryBufferView data = null;
-    DeviceMemoryBufferView offsets = null;
-    if (type != DType.STRING) {
-      data = new DeviceMemoryBufferView(offHeap.cudfColumnHandle.getNativeDataPointer(), this.rows * type.sizeInBytes);
-    } else {
-      long[] dataAndOffsets = CudfColumn.getStringDataAndOffsets(getNativeCudfColumnAddress());
-      data = new DeviceMemoryBufferView(dataAndOffsets[0], dataAndOffsets[1]);
-      offsets = new DeviceMemoryBufferView(dataAndOffsets[2], dataAndOffsets[3]);
+    if (this.rows != 0) {
+      DeviceMemoryBufferView data = null;
+      DeviceMemoryBufferView offsets = null;
+      if (type != DType.STRING) {
+        data = new DeviceMemoryBufferView(offHeap.cudfColumnHandle.getNativeDataPointer(), this.rows * type.sizeInBytes);
+      } else {
+        long[] dataAndOffsets = CudfColumn.getStringDataAndOffsets(getNativeCudfColumnAddress());
+        data = new DeviceMemoryBufferView(dataAndOffsets[0], dataAndOffsets[1]);
+        offsets = new DeviceMemoryBufferView(dataAndOffsets[2], dataAndOffsets[3]);
+      }
+      DeviceMemoryBufferView valid = null;
+      long validPointer = offHeap.cudfColumnHandle.getNativeValidPointer();
+      if (validPointer != 0) {
+        valid = new DeviceMemoryBufferView(validPointer, CudfColumn.getNativeValidPointerSize((int) rows));
+      }
+      this.offHeap.setDeviceData(new BufferEncapsulator<>(data, valid, offsets));
     }
-    DeviceMemoryBufferView valid = null;
-    long validPointer = offHeap.cudfColumnHandle.getNativeValidPointer();
-    if (validPointer != 0) {
-      valid = new DeviceMemoryBufferView(validPointer, CudfColumn.getNativeValidPointerSize((int) rows));
-    }
-    this.offHeap.setDeviceData(new BufferEncapsulator<>(data, valid, offsets));
     this.refCount = 0;
     incRefCountInternal(true);
     MemoryListener.deviceAllocation(getDeviceMemorySize(), internalId);
@@ -1328,115 +1330,6 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
   }
 
   /**
-   * Fill the current vector (note this is in-place) with a Scalar value.
-   *
-   * String categories are not supported by cudf::fill. Additionally, Scalar
-   * does not support Strings either.
-   *
-   * @param scalar - Scalar value to replace row with
-   * @throws IllegalArgumentException
-   */
-  // package private for testing
-  void fill(Scalar scalar) throws IllegalArgumentException {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert scalar.getType() == this.getType();
-
-    if (this.getType() == TypeId.STRING || this.getType() == TypeId.STRING_CATEGORY){
-      throw new IllegalStateException("TypeId of STRING, or STRING_CATEGORY not supported");
-    }
-
-    if (this.getRowCount() == 0) {
-      return; // no rows to fill
-    }
-
-    checkHasDeviceData();
-
-    BufferEncapsulator<DeviceMemoryBuffer> newDeviceData = null;
-    boolean needsCleanup = true;
-
-    try {
-      if (!scalar.isValid()) {
-        if (getNullCount() == getRowCount()) {
-          //current vector has all nulls, and we are trying to set it to null.
-          return;
-        }
-        this.nullCount = rows;
-
-        if (offHeap.getDeviceData().valid == null) {
-          long validitySizeInBytes = BitVectorHelper.getValidityAllocationSizeInBytes(rows);
-          // scalar is null and vector doesn't have a validity mask. Create a validity mask.
-          newDeviceData = new BufferEncapsulator<DeviceMemoryBuffer>(
-              this.offHeap.getDeviceData().data,
-              DeviceMemoryBuffer.allocate(validitySizeInBytes),
-              null);
-          this.offHeap.setDeviceData(newDeviceData);
-        } else {
-          newDeviceData = this.offHeap.getDeviceData();
-        }
-
-        // the buffer encapsulator is the owner of newDeviceData, no need to clear
-        needsCleanup = false;
-
-        Cuda.memset(newDeviceData.valid.getAddress(), (byte) 0x00,
-            BitVectorHelper.getValidityLengthInBytes(rows));
-
-        // set the validity pointer
-        cudfColumnViewAugmented(
-            this.getNativeCudfColumnAddress(),
-            newDeviceData.data.address,
-            newDeviceData.valid.address,
-            (int) this.getRowCount(),
-            this.getType().nativeId,
-            (int) this.nullCount,
-            this.getTimeUnit().getNativeId());
-
-      } else {
-        this.nullCount = 0;
-        newDeviceData = this.offHeap.getDeviceData();
-        needsCleanup = false; // the data came from upstream
-
-        // if we are now setting the vector to a non-null, we need to
-        // close out the validity vector
-        if (newDeviceData.valid != null){
-          newDeviceData.valid.close();
-          newDeviceData = new BufferEncapsulator<DeviceMemoryBuffer>(
-              newDeviceData.data, null, null);
-          this.offHeap.setDeviceData(newDeviceData);
-        }
-
-        // set the validity pointer
-        cudfColumnViewAugmented(
-            this.getNativeCudfColumnAddress(),
-            newDeviceData.data.address,
-            0,
-            (int) this.getRowCount(),
-            this.getType().nativeId,
-            (int) nullCount,
-            this.getTimeUnit().getNativeId());
-
-        Cudf.fill(this, scalar);
-      }
-
-      // at this stage, host offHeap is no longer meaningful
-      // if we had hostData, reset it with a fresh copy from device
-      if (this.offHeap.getHostData() != null) {
-        this.offHeap.getHostData().close();
-        this.offHeap.setHostData(null);
-        this.ensureOnHost();
-      }
-    } finally {
-      if (needsCleanup) {
-        if (newDeviceData != null) {
-          // we allocated a bit vector, but we errored out
-          newDeviceData.valid.close();
-        }
-      }
-    }
-*/
-  }
-
-  /**
    * Computes the sum of all values in the column, returning a scalar
    * of the same type as this column.
    */
@@ -1977,6 +1870,8 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 
 //  private static native long concatenate(long[] columnHandles) throws CudfException;
 
+  private static native long fromScalar(long scalarHandle, int rowCount) throws CudfException;
+
   private static native long replaceNulls(long columnHandle, long scalarHandle) throws CudfException;
 
   private static native long isNullNative(long nativeHandle);
@@ -2496,56 +2391,11 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return - new ColumnVector
    */
   public static ColumnVector fromScalar(Scalar scalar, int rows) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    if (scalar.getType() == TypeId.STRING || scalar.getType() == TypeId.STRING_CATEGORY) {
-      throw new IllegalArgumentException("STRING and STRING_CATEGORY are not supported scalars");
+    long amount = predictSizeFor(scalar.getType().sizeInBytes, rows, !scalar.isValid());
+    try (DevicePrediction ignored = new DevicePrediction(amount, "fromScalar")) {
+      long columnHandle = fromScalar(scalar.getScalarHandle(), rows);
+      return new ColumnVector(columnHandle);
     }
-    DeviceMemoryBuffer dataBuffer = null;
-    ColumnVector cv = null;
-    boolean needsCleanup = true;
-
-    long amount = predictSizeFor(scalar.type.sizeInBytes, rows, !scalar.isValid);
-    try (DevicePrediction prediction = new DevicePrediction(amount, "fromScalar")) {
-      dataBuffer = DeviceMemoryBuffer.allocate(amount);
-
-      cv = new ColumnVector(
-          scalar.getType(),
-          scalar.getTimeUnit(),
-          rows,
-          0,
-          dataBuffer,
-          null,
-          null, false);
-
-      // null this out as cv is the owner, and will be closed
-      // when cv closes in case of failure
-      dataBuffer = null;
-
-      cudfColumnViewAugmented(
-          cv.getNativeCudfColumnAddress(),
-          cv.offHeap.getDeviceData().data.address,
-          0,
-          (int) cv.getRowCount(),
-          cv.getType().nativeId,
-          0,
-          cv.getTimeUnit().getNativeId());
-
-      cv.fill(scalar);
-
-      needsCleanup = false;
-      return cv;
-    } finally {
-      if (needsCleanup) {
-        if (dataBuffer != null) {
-          dataBuffer.close();
-        }
-        if (cv != null) {
-          cv.close();
-        }
-      }
-    }
-*/
   }
 
   /**

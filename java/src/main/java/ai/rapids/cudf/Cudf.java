@@ -96,14 +96,6 @@ class Cudf {
                                            int op, int dtype);
 
 
-  static void fill(ColumnVector input, Scalar value) {
-    //fill(input.getNativeCudfColumnAddress(), value.getScalarHandle());
-    throw new UnsupportedOperationException("NOT PORTED YET");
-  }
-
-  private static native void fill(long input, long sIntValues, float sFValue,
-                                  double sDValue, boolean sIsValid, int sDtype);
-
   static Scalar reduce(ColumnVector v, ReductionOp op, DType outType) {
     return reduce(v.getNativeCudfColumnAddress(), op.nativeId, outType.nativeId);
   }
