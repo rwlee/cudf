@@ -26,6 +26,12 @@ import static ai.rapids.cudf.TableTest.assertColumnsAreEqual;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TimestampColumnVectorTest extends CudfTestBase {
+  static final int[] TIMES_DAY = {-1528,    //1965-10-26
+                                  17716,    //2018-07-04
+                                  19382,    //2023-01-25
+                                  -1528,    //1965-10-26
+                                  17716};   //2018-07-04 
+
   static final long[] TIMES_S = {-131968728L,   //'1965-10-26 14:01:12'
                                  1530705600L,   //'2018-07-04 12:00:00'
                                  1674631932L,   //'2023-01-25 07:32:12'
@@ -243,16 +249,34 @@ public class TimestampColumnVectorTest extends CudfTestBase {
   }
 
   @Test
+  public void testTimestampToDays() {
+    try (ColumnVector s_string_times = ColumnVector.fromStrings(TIMES_S_STRING);
+         ColumnVector ms_string_times = ColumnVector.fromStrings(TIMES_MS_STRING);
+         ColumnVector us_string_times = ColumnVector.fromStrings(TIMES_US_STRING);
+         ColumnVector ns_string_times = ColumnVector.fromStrings(TIMES_NS_STRING);
+         ColumnVector day_expected = ColumnVector.daysFromInts(TIMES_DAY);
+         ColumnVector s_result = s_string_times.asTimestamp(DType.TIMESTAMP_DAYS, "%Y-%m-%d %H:%M:%S");
+         ColumnVector ms_result = ms_string_times.asTimestamp(DType.TIMESTAMP_DAYS, "%Y-%m-%d %H:%M:%S.%f");
+         ColumnVector us_result = us_string_times.asTimestamp(DType.TIMESTAMP_DAYS, "%Y-%m-%d %H:%M:%S.%f");
+         ColumnVector ns_result = ns_string_times.asTimestamp(DType.TIMESTAMP_DAYS, "%Y-%m-%d %H:%M:%S.%f")) {
+      assertColumnsAreEqual(day_expected, s_result);
+      assertColumnsAreEqual(day_expected, ms_result);
+      assertColumnsAreEqual(day_expected, us_result);
+      assertColumnsAreEqual(day_expected, ns_result);
+    }
+  }
+
+  @Test
   public void testTimestampToLongSecond() {
     try (ColumnVector s_string_times = ColumnVector.fromStrings(TIMES_S_STRING);
          ColumnVector ms_string_times = ColumnVector.fromStrings(TIMES_MS_STRING);
          ColumnVector us_string_times = ColumnVector.fromStrings(TIMES_US_STRING);
          ColumnVector ns_string_times = ColumnVector.fromStrings(TIMES_NS_STRING);
          ColumnVector s_expected = ColumnVector.timestampSecondsFromLongs(TIMES_S);
-         ColumnVector s_result = s_string_times.asTimestamp(TimeUnit.SECONDS, "%Y-%m-%d %H:%M:%S");
-         ColumnVector ms_result = ms_string_times.asTimestamp(TimeUnit.SECONDS, "%Y-%m-%d %H:%M:%S.%f");
-         ColumnVector us_result = us_string_times.asTimestamp(TimeUnit.SECONDS, "%Y-%m-%d %H:%M:%S.%f");
-         ColumnVector ns_result = ns_string_times.asTimestamp(TimeUnit.SECONDS, "%Y-%m-%d %H:%M:%S.%f")) {
+         ColumnVector s_result = s_string_times.asTimestamp(DType.TIMESTAMP_SECONDS, "%Y-%m-%d %H:%M:%S");
+         ColumnVector ms_result = ms_string_times.asTimestamp(DType.TIMESTAMP_SECONDS, "%Y-%m-%d %H:%M:%S.%f");
+         ColumnVector us_result = us_string_times.asTimestamp(DType.TIMESTAMP_SECONDS, "%Y-%m-%d %H:%M:%S.%f");
+         ColumnVector ns_result = ns_string_times.asTimestamp(DType.TIMESTAMP_SECONDS, "%Y-%m-%d %H:%M:%S.%f")) {
       assertColumnsAreEqual(s_expected, s_result);
       assertColumnsAreEqual(s_expected, ms_result);
       assertColumnsAreEqual(s_expected, us_result);
@@ -268,10 +292,10 @@ public class TimestampColumnVectorTest extends CudfTestBase {
          ColumnVector ns_string_times = ColumnVector.fromStrings(TIMES_NS_STRING);
          ColumnVector s_expected = applyAndClose(mulThouAndClose(ColumnVector.fromLongs(TIMES_S), 1), cv -> cv.asTimestampMilliseconds());
          ColumnVector ms_expected = ColumnVector.timestampMilliSecondsFromLongs(TIMES_MS);
-         ColumnVector s_result = s_string_times.asTimestamp(TimeUnit.NONE, "%Y-%m-%d %H:%M:%S");
-         ColumnVector ms_result = ms_string_times.asTimestamp(TimeUnit.MILLISECONDS, "%Y-%m-%d %H:%M:%S.%f");
-         ColumnVector us_result = us_string_times.asTimestamp(TimeUnit.NONE, "%Y-%m-%d %H:%M:%S.%f");
-         ColumnVector ns_result = ns_string_times.asTimestamp(TimeUnit.MILLISECONDS, "%Y-%m-%d %H:%M:%S.%f")) {
+         ColumnVector s_result = s_string_times.asTimestamp(DType.TIMESTAMP_MILLISECONDS, "%Y-%m-%d %H:%M:%S");
+         ColumnVector ms_result = ms_string_times.asTimestamp(DType.TIMESTAMP_MILLISECONDS, "%Y-%m-%d %H:%M:%S.%f");
+         ColumnVector us_result = us_string_times.asTimestamp(DType.TIMESTAMP_MILLISECONDS, "%Y-%m-%d %H:%M:%S.%f");
+         ColumnVector ns_result = ns_string_times.asTimestamp(DType.TIMESTAMP_MILLISECONDS, "%Y-%m-%d %H:%M:%S.%f")) {
       assertColumnsAreEqual(s_expected, s_result);
       assertColumnsAreEqual(ms_expected, ms_result);
       assertColumnsAreEqual(ms_expected, us_result);
@@ -288,10 +312,10 @@ public class TimestampColumnVectorTest extends CudfTestBase {
          ColumnVector s_expected = applyAndClose(mulThouAndClose(ColumnVector.fromLongs(TIMES_S), 2), cv -> cv.asTimestampMicroseconds());
          ColumnVector ms_expected = applyAndClose(mulThouAndClose(ColumnVector.fromLongs(TIMES_MS), 1), cv -> cv.asTimestampMicroseconds());
          ColumnVector us_expected = ColumnVector.timestampMicroSecondsFromLongs(TIMES_US);
-         ColumnVector s_result = s_string_times.asTimestamp(TimeUnit.MICROSECONDS, "%Y-%m-%d %H:%M:%S");
-         ColumnVector ms_result = ms_string_times.asTimestamp(TimeUnit.MICROSECONDS, "%Y-%m-%d %H:%M:%S.%f");
-         ColumnVector us_result = us_string_times.asTimestamp(TimeUnit.MICROSECONDS, "%Y-%m-%d %H:%M:%S.%f");
-         ColumnVector ns_result = ns_string_times.asTimestamp(TimeUnit.MICROSECONDS, "%Y-%m-%d %H:%M:%S.%f")) {
+         ColumnVector s_result = s_string_times.asTimestamp(DType.TIMESTAMP_MICROSECONDS, "%Y-%m-%d %H:%M:%S");
+         ColumnVector ms_result = ms_string_times.asTimestamp(DType.TIMESTAMP_MICROSECONDS, "%Y-%m-%d %H:%M:%S.%f");
+         ColumnVector us_result = us_string_times.asTimestamp(DType.TIMESTAMP_MICROSECONDS, "%Y-%m-%d %H:%M:%S.%f");
+         ColumnVector ns_result = ns_string_times.asTimestamp(DType.TIMESTAMP_MICROSECONDS, "%Y-%m-%d %H:%M:%S.%f")) {
       assertColumnsAreEqual(s_expected, s_result);
       assertColumnsAreEqual(ms_expected, ms_result);
       assertColumnsAreEqual(us_expected, us_result);
@@ -309,48 +333,11 @@ public class TimestampColumnVectorTest extends CudfTestBase {
          ColumnVector ms_expected = applyAndClose(mulThouAndClose(ColumnVector.fromLongs(TIMES_MS), 2), cv -> cv.asTimestampNanoseconds());
          ColumnVector us_expected = applyAndClose(mulThouAndClose(ColumnVector.fromLongs(TIMES_US), 1), cv -> cv.asTimestampNanoseconds());
          ColumnVector ns_expected = ColumnVector.timestampNanoSecondsFromLongs(TIMES_NS);
-         ColumnVector s_result = s_string_times.asTimestamp(TimeUnit.NANOSECONDS, "%Y-%m-%d %H:%M:%S");
-         ColumnVector ms_result = ms_string_times.asTimestamp(TimeUnit.NANOSECONDS, "%Y-%m-%d %H:%M:%S.%f");
-         ColumnVector us_result = us_string_times.asTimestamp(TimeUnit.NANOSECONDS, "%Y-%m-%d %H:%M:%S.%f");
-         ColumnVector ns_result = ns_string_times.asTimestamp(TimeUnit.NANOSECONDS, "%Y-%m-%d %H:%M:%S.%f")) {
+         ColumnVector s_result = s_string_times.asTimestamp(DType.TIMESTAMP_NANOSECONDS, "%Y-%m-%d %H:%M:%S");
+         ColumnVector ms_result = ms_string_times.asTimestamp(DType.TIMESTAMP_NANOSECONDS, "%Y-%m-%d %H:%M:%S.%f");
+         ColumnVector us_result = us_string_times.asTimestamp(DType.TIMESTAMP_NANOSECONDS, "%Y-%m-%d %H:%M:%S.%f");
+         ColumnVector ns_result = ns_string_times.asTimestamp(DType.TIMESTAMP_NANOSECONDS, "%Y-%m-%d %H:%M:%S.%f")) {
       assertColumnsAreEqual(s_expected, s_result);
-      assertColumnsAreEqual(ms_expected, ms_result);
-      assertColumnsAreEqual(us_expected, us_result);
-      assertColumnsAreEqual(ns_expected, ns_result);
-    }
-  }
-
-  @Test
-  public void testStringTimestampToLongSecond() {
-    try (ColumnVector s_string_times = ColumnVector.fromStrings(TIMES_S_STRING);
-         ColumnVector ms_string_times = ColumnVector.fromStrings(TIMES_MS_STRING);
-         ColumnVector us_string_times = ColumnVector.fromStrings(TIMES_US_STRING);
-         ColumnVector ns_string_times = ColumnVector.fromStrings(TIMES_NS_STRING);
-         ColumnVector s_expected = ColumnVector.timestampSecondsFromLongs(TIMES_S);
-         ColumnVector s_result = s_string_times.asTimestamp(TimeUnit.SECONDS, "%Y-%m-%d %H:%M:%S");
-         ColumnVector ms_result = ms_string_times.asTimestamp(TimeUnit.SECONDS, "%Y-%m-%d %H:%M:%S.%f");
-         ColumnVector us_result = us_string_times.asTimestamp(TimeUnit.SECONDS, "%Y-%m-%d %H:%M:%S.%f");
-         ColumnVector ns_result = ns_string_times.asTimestamp(TimeUnit.SECONDS, "%Y-%m-%d %H:%M:%S.%f")) {
-      assertColumnsAreEqual(s_expected, s_result);
-      assertColumnsAreEqual(s_expected, ms_result);
-      assertColumnsAreEqual(s_expected, us_result);
-      assertColumnsAreEqual(s_expected, ns_result);
-    }
-  }
-
-  @Test
-  public void testStringTimestampToSubsecond() {
-    try (ColumnVector ms_string_times = ColumnVector.fromStrings(TIMES_MS_STRING);
-         ColumnVector us_string_times = ColumnVector.fromStrings(TIMES_US_STRING);
-         ColumnVector ns_string_times = ColumnVector.fromStrings(TIMES_NS_STRING);
-         ColumnVector ms_expected = ColumnVector.timestampMilliSecondsFromLongs(TIMES_MS);
-         ColumnVector us_expected = ColumnVector.timestampMicroSecondsFromLongs(TIMES_US);
-         ColumnVector ns_expected = ColumnVector.timestampNanoSecondsFromLongs(TIMES_NS);
-         ColumnVector ms_result = ms_string_times.asTimestamp(TimeUnit.MILLISECONDS, "%Y-%m-%d %H:%M:%S.%f");
-         ColumnVector ms_result_null = ms_string_times.asTimestamp(TimeUnit.NONE, "%Y-%m-%d %H:%M:%S.%f");
-         ColumnVector us_result = us_string_times.asTimestamp(TimeUnit.MICROSECONDS, "%Y-%m-%d %H:%M:%S.%f");
-         ColumnVector ns_result = ns_string_times.asTimestamp(TimeUnit.NANOSECONDS, "%Y-%m-%d %H:%M:%S.%f")) {
-      assertColumnsAreEqual(ms_expected, ms_result_null);
       assertColumnsAreEqual(ms_expected, ms_result);
       assertColumnsAreEqual(us_expected, us_result);
       assertColumnsAreEqual(ns_expected, ns_result);
