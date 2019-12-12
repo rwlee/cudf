@@ -1505,11 +1505,8 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
   }
 
   private long predictSizeForRowMult(long baseSize, double rowMult) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     long rowGuess = (long)(rows * rowMult);
     return predictSizeFor(baseSize, rowGuess, hasNulls());
-*/
   }
 
   /**
@@ -1601,7 +1598,21 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return A new vector allocated on the GPU
    */
   public ColumnVector asTimestampDays() {
+    if (type == DType.STRING) {
+      return asTimestamp(DType.TIMESTAMP_DAYS, "%Y-%m-%dT%H:%M:%SZ%f");
+    }
     return castTo(DType.TIMESTAMP_DAYS);
+  }
+
+  /**
+   * Cast to TIMESTAMP_DAYS - ColumnVector
+   * This method takes the string value provided by the ColumnVector and casts to TIMESTAMP_DAYS
+   * @param format timestamp string format specifier, ignored if the column type is not string
+   * @return A new vector allocated on the GPU
+   */
+  public ColumnVector asTimestampDays(String format) {
+    assert type == DType.STRING : "A column of type string is required when using a format string";
+    return asTimestamp(DType.TIMESTAMP_DAYS, format);
   }
 
   /**
@@ -1610,7 +1621,21 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return A new vector allocated on the GPU
    */
   public ColumnVector asTimestampSeconds() {
+    if (type == DType.STRING) {
+      return asTimestamp(DType.TIMESTAMP_SECONDS, "%Y-%m-%dT%H:%M:%SZ%f");
+    }
     return castTo(DType.TIMESTAMP_SECONDS);
+  }
+
+  /**
+   * Cast to TIMESTAMP_SECONDS - ColumnVector
+   * This method takes the string value provided by the ColumnVector and casts to TIMESTAMP_SECONDS
+   * @param format timestamp string format specifier, ignored if the column type is not string
+   * @return A new vector allocated on the GPU
+   */
+  public ColumnVector asTimestampSeconds(String format) {
+    assert type == DType.STRING : "A column of type string is required when using a format string";
+    return asTimestamp(DType.TIMESTAMP_SECONDS, format);
   }
 
   /**
@@ -1619,7 +1644,21 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return A new vector allocated on the GPU
    */
   public ColumnVector asTimestampMicroseconds() {
+    if (type == DType.STRING) {
+      return asTimestamp(DType.TIMESTAMP_MICROSECONDS, "%Y-%m-%dT%H:%M:%SZ%f");
+    }
     return castTo(DType.TIMESTAMP_MICROSECONDS);
+  }
+
+  /**
+   * Cast to TIMESTAMP_MICROSECONDS - ColumnVector
+   * This method takes the string value provided by the ColumnVector and casts to TIMESTAMP_MICROSECONDS
+   * @param format timestamp string format specifier, ignored if the column type is not string
+   * @return A new vector allocated on the GPU
+   */
+  public ColumnVector asTimestampMicroseconds(String format) {
+    assert type == DType.STRING : "A column of type string is required when using a format string";
+    return asTimestamp(DType.TIMESTAMP_MICROSECONDS, format);
   }
 
   /**
@@ -1628,7 +1667,21 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return A new vector allocated on the GPU
    */
   public ColumnVector asTimestampMilliseconds() {
+    if (type == DType.STRING) {
+      return asTimestamp(DType.TIMESTAMP_MILLISECONDS, "%Y-%m-%dT%H:%M:%SZ%f");
+    }
     return castTo(DType.TIMESTAMP_MILLISECONDS);
+  }
+
+  /**
+   * Cast to TIMESTAMP_MILLISECONDS - ColumnVector
+   * This method takes the string value provided by the ColumnVector and casts to TIMESTAMP_MILLISECONDS.
+   * @param format timestamp string format specifier, ignored if the column type is not string
+   * @return A new vector allocated on the GPU
+   */
+  public ColumnVector asTimestampMilliseconds(String format) {
+    assert type == DType.STRING : "A column of type string is required when using a format string";
+    return asTimestamp(DType.TIMESTAMP_MILLISECONDS, format);
   }
 
   /**
@@ -1637,7 +1690,21 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return A new vector allocated on the GPU
    */
   public ColumnVector asTimestampNanoseconds() {
+    if (type == DType.STRING) {
+      return asTimestamp(DType.TIMESTAMP_NANOSECONDS, "%Y-%m-%dT%H:%M:%SZ%f");
+    }
     return castTo(DType.TIMESTAMP_NANOSECONDS);
+  }
+
+  /**
+   * Cast to TIMESTAMP_NANOSECONDS - ColumnVector
+   * This method takes the string value provided by the ColumnVector and casts to TIMESTAMP_NANOSECONDS.
+   * @param format timestamp string format specifier, ignored if the column type is not string
+   * @return A new vector allocated on the GPU
+   */
+  public ColumnVector asTimestampNanoseconds(String format) {
+    assert type == DType.STRING : "A column of type string is required when using a format string";
+    return asTimestamp(DType.TIMESTAMP_NANOSECONDS, format);
   }
 
   /**
@@ -1662,7 +1729,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * cudf native handle and uses it to invoke the native function that calls NVStrings'
    * timestamp2long method. Strings that fail to parse will default to 0, corresponding
    * to 1970-01-01 00:00:00.000.
-   * @param unit time unit to parse the timestamp into.
+   * @param timestampType timestamp DType that includes the time unit to parse the timestamp into.
    * @param format strptime format specifier string of the timestamp. Used to parse and convert
    *               the timestamp with. Supports %Y,%y,%m,%d,%H,%I,%p,%M,%S,%f,%z format specifiers.
    *               See https://github.com/rapidsai/custrings/blob/branch-0.10/docs/source/datetime.md
@@ -1670,21 +1737,17 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return A new ColumnVector containing the long representations of the timestamps in the
    *         original column vector.
    */
-  public ColumnVector asTimestamp(TimeUnit unit, String format) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
-    assert type == TypeId.STRING  || type == TypeId.STRING_CATEGORY : "A column of type string " +
-                                  "is required for .timestampToLong() operation";
+  public ColumnVector asTimestamp(DType timestampType, String format) {
+    assert type == DType.STRING : "A column of type string " +
+                                  "is required for .to_timestamp() operation";
     assert format != null : "Format string may not be NULL";
-    if (unit == TimeUnit.NONE) {
-      unit = TimeUnit.MILLISECONDS;
-    }
+    assert timestampType.isTimestamp() : "unsupported conversion to non-timestamp DType";
+
     // Prediction could be better, but probably okay for now
     try (DevicePrediction prediction = new DevicePrediction(predictSizeForRowMult(format.length(), 2), "asTimestamp")) {
       return new ColumnVector(stringTimestampToTimestamp(getNativeCudfColumnAddress(),
-          unit.getNativeId(), format));
+          timestampType.nativeId, format));
     }
-*/
   }
 
   /**

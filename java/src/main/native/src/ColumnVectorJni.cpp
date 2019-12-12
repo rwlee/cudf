@@ -21,6 +21,7 @@
 #include <cudf/filling.hpp>
 #include <cudf/replace.hpp>
 #include <cudf/strings/attributes.hpp>
+#include <cudf/strings/convert/convert_datetime.hpp>
 #include <cudf/strings/strings_column_view.hpp>
 #include <cudf/unary.hpp>
 
@@ -219,16 +220,6 @@ JNIEXPORT void JNICALL Java_ai_rapids_cudf_ColumnVector_cudfColumnViewStrings(
   CATCH_STD(env, );
 }
 
-NVStrings::timestamp_units translateTimestampUnit(gdf_time_unit time_unit) {
-  switch (time_unit) {
-    case TIME_UNIT_s: return NVStrings::seconds;
-    case TIME_UNIT_ms: return NVStrings::ms;
-    case TIME_UNIT_us: return NVStrings::us;
-    case TIME_UNIT_ns: return NVStrings::ns;
-  }
-  throw std::logic_error("UNSUPPORTED COLUMN VECTOR TIMESTAMP UNIT");
-}
-
 // Resolve the mutated dictionary with the original index values
 // gathering column metadata from the most relevant sources
 cudf::jni::gdf_column_wrapper gather_mutated_category(gdf_column *dict_result, gdf_column *column) {
@@ -249,75 +240,6 @@ cudf::jni::gdf_column_wrapper gather_mutated_category(gdf_column *dict_result, g
   result_ptr->dtype_info.time_unit = dict_result->dtype_info.time_unit;
 
   return result;
-}
-
-JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_stringTimestampToTimestamp(
-    JNIEnv *env, jobject j_object, jlong handle, jint time_unit, jstring formatObj) {
-  JNI_NULL_CHECK(env, handle, "column is null", 0);
-  if (formatObj == NULL) {
-    JNI_THROW_NEW(env, "java/lang/IllegalArgumentException", "must pass a timestamp format string",
-                  0)
-  }
-
-  try {
-    cudf::jni::native_jstring format(env, formatObj);
-
-    gdf_column *column = reinterpret_cast<gdf_column *>(handle);
-
-    if (column->dtype == GDF_STRING) {
-      cudf::jni::gdf_column_wrapper output(column->size, gdf_dtype::GDF_TIMESTAMP,
-                                           column->null_count != 0);
-      output->dtype_info.time_unit = (gdf_time_unit)time_unit;
-
-      if (column->size > 0) {
-        NVStrings *strings = static_cast<NVStrings *>(column->data);
-        JNI_ARG_CHECK(env, column->size == strings->size(),
-                      "NVStrings size and gdf_column size mismatch", 0);
-        int result = strings->timestamp2long(format.get(),
-                                             translateTimestampUnit(output->dtype_info.time_unit),
-                                             static_cast<unsigned long *>(output->data));
-        if (result == -1) {
-          throw std::logic_error("timestamp2long returned with errors");
-        }
-        if (column->null_count > 0) {
-          CUDA_TRY(cudaMemcpy(output->valid, column->valid, gdf_num_bitmask_elements(column->size),
-                              cudaMemcpyDeviceToDevice));
-          output->null_count = column->null_count;
-        }
-      }
-      return reinterpret_cast<jlong>(output.release());
-    } else if (column->dtype == GDF_STRING_CATEGORY) {
-      if (column->size <= 0) {
-        // special case for empty column
-        cudf::jni::gdf_column_wrapper result(column->size, gdf_dtype::GDF_TIMESTAMP,
-                                             column->null_count != 0);
-        return reinterpret_cast<jlong>(result.release());
-      }
-
-      // Do the operation on the dictionary
-      NVCategory *cats = static_cast<NVCategory *>(column->dtype_info.category);
-      unique_nvstr_ptr keys (cats->get_keys(), &NVStrings::destroy);
-      unsigned int dict_size = keys->size();
-
-      cudf::jni::gdf_column_wrapper dict_result(dict_size, gdf_dtype::GDF_TIMESTAMP, false);
-      dict_result->dtype_info.time_unit = (gdf_time_unit)time_unit;
-      int err_val = keys->timestamp2long(format.get(),
-                                        translateTimestampUnit(dict_result->dtype_info.time_unit),
-                                        static_cast<unsigned long *>(dict_result->data));
-      if (err_val == -1) {
-         throw std::logic_error("timestamp2long returned with errors");
-      }
-
-      cudf::jni::gdf_column_wrapper res = gather_mutated_category(dict_result.get(), column);
-
-      return reinterpret_cast<jlong>(res.release());
-    } else {
-      throw std::logic_error("ONLY STRING TYPES ARE SUPPORTED...");
-    }
-  }
-  CATCH_STD(env, 0);
-
-  return 0;
 }
 
 JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_upperStrings(JNIEnv *env, jobject j_object,
@@ -841,4 +763,19 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_castTo(JNIEnv *env,
   CATCH_STD(env, 0);
 }
 
+JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_ColumnVector_stringTimestampToTimestamp(
+    JNIEnv *env, jobject j_object, jlong handle, jint time_unit, jstring formatObj) {
+  JNI_NULL_CHECK(env, handle, "column is null", 0);
+  JNI_NULL_CHECK(env, formatObj, "format is null", 0);
+
+  try {
+    cudf::jni::native_jstring format(env, formatObj);
+    cudf::column *column = reinterpret_cast<cudf::column *>(handle);
+    cudf::strings_column_view strings_column(column->view());
+
+    std::unique_ptr<cudf::column> result = cudf::strings::to_timestamps(strings_column, cudf::data_type(static_cast<cudf::type_id>(time_unit)), format.get());
+    return reinterpret_cast<jlong>(result.release());
+  }
+  CATCH_STD(env, 0);
+}
 } // extern "C"
