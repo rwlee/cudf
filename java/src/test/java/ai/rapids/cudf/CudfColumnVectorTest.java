@@ -60,12 +60,12 @@ public class CudfColumnVectorTest extends CudfTestBase {
 
   @Test
   void testString() {
-    try (ColumnVector cv = ColumnVector.fromStrings("d", "sd", "sd")) {
+    try (ColumnVector cv = ColumnVector.fromStrings("d", "sd", "sde", null, "END");
+    ColumnVector orig = ColumnVector.fromStrings("d", "sd", "sde", null, "END")) {
+      TableTest.assertColumnsAreEqual(orig, cv);
       cv.dropHostData();
       cv.ensureOnHost();
-      for (int i = 0 ; i < cv.getRowCount() ; i++) {
-        System.out.println(cv.getJavaString(i));
-      }
+      TableTest.assertColumnsAreEqual(orig, cv);
     }
   }
 }

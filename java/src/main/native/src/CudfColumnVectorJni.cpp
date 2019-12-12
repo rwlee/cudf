@@ -123,6 +123,20 @@ JNIEXPORT jint JNICALL Java_ai_rapids_cudf_CudfColumn_getNativeRowCount(JNIEnv *
   CATCH_STD(env, 0);
 }
 
+JNIEXPORT void JNICALL Java_ai_rapids_cudf_CudfColumn_setNativeNullCount(JNIEnv *env,
+                                                                         jobject j_object,
+                                                                         jlong handle,
+                                                                         jint null_count) {
+  JNI_NULL_CHECK(env, handle, "native handle is null", );
+  try {
+    cudf::column *column = reinterpret_cast<cudf::column *>(handle);
+    column->set_null_count(null_count);
+  }
+  CATCH_STD(env, );
+}
+
+
+
 JNIEXPORT jint JNICALL Java_ai_rapids_cudf_CudfColumn_getNativeNullCount(JNIEnv *env,
                                                                          jobject j_object,
                                                                          jlong handle) {
@@ -146,7 +160,26 @@ JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_CudfColumn_getNativeDataPointer(JNIE
                                                                             jlong handle) {
   try {
     cudf::column *column = reinterpret_cast<cudf::column *>(handle);
-    return reinterpret_cast<jlong>(static_cast<void *>(column->mutable_view().data<char>()));
+    if (column->type().id() == cudf::STRING) {
+      cudf::strings_column_view view = cudf::strings_column_view(column->view());
+      cudf::column_view data_view = view.chars();
+      return reinterpret_cast<jlong>(data_view.data<char>());
+    } else {
+      return reinterpret_cast<jlong>(static_cast<void *>(column->mutable_view().data<char>()));
+    }
+  }
+  CATCH_STD(env, 0);
+}
+
+JNIEXPORT jlong JNICALL Java_ai_rapids_cudf_CudfColumn_getNativeOffsetsPointer(JNIEnv *env,
+                                                                            jobject j_object,
+                                                                            jlong handle) {
+  try {
+    cudf::column *column = reinterpret_cast<cudf::column *>(handle);
+    JNI_ARG_CHECK(env, (column->type().id() == cudf::STRING), "ONLY STRING TYPE IS SUPPORTED", 0);
+    cudf::strings_column_view view = cudf::strings_column_view(column->view());
+    cudf::column_view offsets_view = view.offsets();
+    return reinterpret_cast<jlong>(offsets_view.data<char>());
   }
   CATCH_STD(env, 0);
 }

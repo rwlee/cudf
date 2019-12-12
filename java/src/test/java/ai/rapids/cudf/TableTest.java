@@ -903,7 +903,7 @@ public class TableTest extends CudfTestBase {
   void testBoundsEmptyValues() {
     boolean[] descFlags = new boolean[1];
     try (ColumnVector cv = new ColumnVector(DType.INT64,
-        0, 0, null, null);
+        0, Optional.of(0L), null, null);
         Table table = new TestBuilder()
             .column(10, 20, 20, 20, 20)
             .build();
@@ -919,7 +919,7 @@ public class TableTest extends CudfTestBase {
   void testBoundsEmptyInput() {
     boolean[] descFlags = new boolean[1];
     try (ColumnVector cv = new ColumnVector(DType.INT64,
-        0, 0, null, null);
+        0, Optional.of(0L), null, null);
         Table table = new Table(cv);
         Table values = new TestBuilder()
             .column(20)

@@ -19,12 +19,25 @@
 package ai.rapids.cudf;
 
 class CudfColumn {
+  // This must be kept in sync with the native code
+  public static final int UNKNOWN_NULL_COUNT = -1;
   public final long nativeHandle;
 
   public CudfColumn(long nativeHandle) {
     this.nativeHandle = nativeHandle;
   }
 
+  /**
+   * Create an empty column
+   */
+  public CudfColumn(DType dtype) {
+    this.nativeHandle = makeEmptyCudfColumn(dtype.nativeId);
+  }
+
+  /**
+   * Allocate a non-string column. Data must be copied into it after it is allocated, and if
+   * null count is known it must be set after it is allocated.
+   */
   public CudfColumn(DType dtype, int rows, MaskState maskState) {
     if (rows == 0) {
       this.nativeHandle = makeEmptyCudfColumn(dtype.nativeId);
@@ -35,6 +48,9 @@ class CudfColumn {
     }
   }
 
+  /**
+   * Create a string column from host side data.
+   */
   public CudfColumn(long charData, long offsetData, long validData, int nullCount, int rows) {
     if (rows == 0) {
       this.nativeHandle = makeEmptyCudfColumn(DType.STRING.nativeId);
@@ -55,8 +71,16 @@ class CudfColumn {
     return getNativeNullCount(nativeHandle);
   }
 
+  public void setNullCount(int nullCount) throws CudfException {
+    setNativeNullCount(nativeHandle, nullCount);
+  }
+
   public long getNativeDataPointer() {
     return getNativeDataPointer(nativeHandle);
+  }
+
+  public long getNativeOffsetsPointer() {
+    return getNativeOffsetsPointer(nativeHandle);
   }
 
   public void deleteCudfColumn() {
@@ -76,9 +100,13 @@ class CudfColumn {
 
   private native int getNativeRowCount(long cudfColumnHandle) throws CudfException;
 
+  private native void setNativeNullCount(long cudfColumnHandle, int nullCount) throws CudfException;
+
   private native int getNativeNullCount(long cudfColumnHandle) throws CudfException;
 
   private native long getNativeDataPointer(long cudfColumnHandle) throws CudfException;
+
+  private native long getNativeOffsetsPointer(long cudfColumnHandle) throws CudfException;
 
   private native long getNativeValidPointer(long cudfColumnHandle) throws CudfException;
 
