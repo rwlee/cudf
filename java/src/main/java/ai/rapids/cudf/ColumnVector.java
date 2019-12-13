@@ -1089,22 +1089,19 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    */
   @Override
   public ColumnVector binaryOp(BinaryOp op, BinaryOperable rhs, DType outType) {
-    throw new UnsupportedOperationException(STANDARD_CUDF_PORTING_MSG);
-/*
     try (DevicePrediction prediction = new DevicePrediction(predictSizeFor(outType), "binaryOp")) {
       if (rhs instanceof ColumnVector) {
         ColumnVector cvRhs = (ColumnVector) rhs;
         assert rows == cvRhs.getRowCount();
-        return new ColumnVector(Cudf.gdfBinaryOp(this, cvRhs, op, outType));
+        return new ColumnVector(Cudf.binaryOp(this, cvRhs, op, outType));
       } else if (rhs instanceof Scalar) {
         Scalar sRhs = (Scalar) rhs;
-        return new ColumnVector(Cudf.gdfBinaryOp(this, sRhs, op, outType));
+        return new ColumnVector(Cudf.binaryOp(this, sRhs, op, outType));
       } else {
         throw new IllegalArgumentException(rhs.getClass() + " is not supported as a binary op" +
             " with ColumnVector");
       }
     }
-*/
   }
 
   /**
