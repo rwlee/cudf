@@ -15,6 +15,7 @@
 - PR #3550 Update Java package to 0.12
 - PR #3549 Fix index name issue with iloc with RangeIndex
 - PR #3562 Fix 4GB limit for gzipped-compressed csv files
+- PR #3563 Use `__cuda_array_interface__` for serialization
 
 
 # cuDF 0.11.0 (11 Dec 2019)
@@ -70,6 +71,7 @@
 - PR #3172 Define and implement new fill/repeat/copy_range APIs
 - PR #3497 Add DataFrame.drop(..., inplace=False) argument
 - PR #3469 Add string functionality for replace API
+- PR #3507 Define and implement new binary operation APIs
 
 ## Improvements
 
