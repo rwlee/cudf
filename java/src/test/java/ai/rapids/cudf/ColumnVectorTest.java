@@ -267,6 +267,43 @@ public class ColumnVectorTest extends CudfTestBase {
     }
   }
 
+  // @Test
+  // void testMD5HashEmpty() {
+
+  // }
+
+  // @Test
+  // void testMD5HashTimestamps() {
+
+  // }
+
+  @Test
+  void testMD5HashStrings() {
+    try (ColumnVector v0 = ColumnVector.fromStrings("0","1","2",null);
+         ColumnVector v1 = ColumnVector.fromStrings(null, "5", "6","7");
+         ColumnVector expected = ColumnVector.fromStrings(
+           "0","1","2",null,
+           null,"5","6","7");
+         ColumnVector v = ColumnVector.md5Hash(v0, v1)) {
+      assertColumnsAreEqual(v, expected);
+    }
+  }
+
+  // @Test
+  // void testMD5HashInts() {
+    
+  // }
+
+  // @Test
+  // void testMD5HashDoubles() {
+    
+  // }
+
+  // @Test
+  // void testMD5HashMixed() {
+
+  // }
+
   @Test
   void isNotNullTestEmptyColumn() {
     try (ColumnVector v = ColumnVector.fromBoxedInts();

@@ -743,6 +743,28 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
     return new ColumnVector(normalizeNANsAndZeros(getNativeView()));
   }
 
+  /**
+   * Create a new vector containing the MD5 hash of each row in the table.
+   *
+   * @param initialValue the initial value to start at.
+   * @param columns array of columns to hash, must have identical number of rows.
+   * @return the new ColumnVector.
+   *
+   */
+  public ColumnVector md5Hash(ColumnVector... columns) {
+    // assert columns.length >= 1 : ".stringConcatenate() operation requires at least 2 columns";
+    long[] column_views = new long[columns.length];
+    long size = columns[0].getRowCount();
+
+    for(int i = 0; i < columns.length; i++) {
+      assert columns[i] != null : "Column vectors passed may not be null";
+      assert columns[i].getRowCount() == size : "Row count mismatch, all columns must have the same number of rows";
+      column_views[i] = columns[i].getNativeView();
+    }
+
+    return new ColumnVector(hash(column_views, MD5_HASH_TYPE))
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // DATE/TIME
   /////////////////////////////////////////////////////////////////////////////
@@ -2568,6 +2590,10 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @throws CudfException On failure to normalize.
    */
   private static native long normalizeNANsAndZeros(long viewHandle) throws CudfException;
+
+  /**
+   */
+  private static native long hash(long[] viewHandles) throws CudfException;
 
   /**
    * Get the number of bytes needed to allocate a validity buffer for the given number of rows.
