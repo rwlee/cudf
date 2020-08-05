@@ -751,18 +751,22 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    * @return the new ColumnVector.
    *
    */
-  public ColumnVector md5Hash(ColumnVector... columns) {
-    // assert columns.length >= 1 : ".stringConcatenate() operation requires at least 2 columns";
+  public static ColumnVector md5Hash(ColumnVector... columns) {
+    if (columns.length < 1) {
+      throw new IllegalArgumentException("MD5 hashing requires at least 1 column of input");
+    }
     long[] column_views = new long[columns.length];
     long size = columns[0].getRowCount();
 
     for(int i = 0; i < columns.length; i++) {
       assert columns[i] != null : "Column vectors passed may not be null";
       assert columns[i].getRowCount() == size : "Row count mismatch, all columns must have the same number of rows";
+      assert !columns[i].getType().isDurationType() : "Unsupported column type Duration";
+      assert !columns[i].getType().isTimestamp() : "Unsupported column type Timestamp";
       column_views[i] = columns[i].getNativeView();
     }
 
-    return new ColumnVector(hash(column_views, MD5_HASH_TYPE))
+    return new ColumnVector(hash(column_views, HashType.HASH_MD5.getNativeId()));
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -1993,6 +1997,56 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
   }
 
   /**
+   * Pad the Strings column until it reaches the desired length with spaces " " on the right.
+   *
+   * If the string is already width or more characters, no padding is performed.
+   * No strings are truncated.
+   *
+   * Null string entries result in null entries in the output column.
+   *
+   * @param width the minimum number of characters for each string.
+   * @return the new strings column.
+   */
+  public ColumnVector pad(int width) {
+    return pad(width, PadSide.RIGHT, " ");
+  }
+
+  /**
+   * Pad the Strings column until it reaches the desired length with spaces " ".
+   *
+   * If the string is already width or more characters, no padding is performed.
+   * No strings are truncated.
+   *
+   * Null string entries result in null entries in the output column.
+   *
+   * @param width the minimum number of characters for each string.
+   * @param side where to add new characters.
+   * @return the new strings column.
+   */
+  public ColumnVector pad(int width, PadSide side) {
+    return pad(width, side, " ");
+  }
+
+  /**
+   * Pad the Strings column until it reaches the desired length.
+   *
+   * If the string is already width or more characters, no padding is performed.
+   * No strings are truncated.
+   *
+   * Null string entries result in null entries in the output column.
+   *
+   * @param width the minimum number of characters for each string.
+   * @param side where to add new characters.
+   * @param fillChar a single character string that holds what should be added.
+   * @return the new strings column.
+   */
+  public ColumnVector pad(int width, PadSide side, String fillChar) {
+    assert fillChar != null;
+    assert fillChar.length() == 1;
+    return new ColumnVector(pad(getNativeView(), width, side.getNativeId(), fillChar));
+  }
+
+  /**
    * Checks if each string in a column starts with a specified comparison string, resulting in a
    * parallel column of the boolean results.
    * @param pattern scalar containing the string being searched for at the beginning of the column's strings.
@@ -2484,6 +2538,8 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
    */
   private static native long zfill(long nativeHandle, int width);
 
+  private static native long pad(long nativeHandle, int width, int side, String fillChar);
+
   private static native long binaryOpVS(long lhs, long rhs, int op, int dtype);
 
   private static native long binaryOpVV(long lhs, long rhs, int op, int dtype);
@@ -2593,7 +2649,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 
   /**
    */
-  private static native long hash(long[] viewHandles) throws CudfException;
+  private static native long hash(long[] viewHandles, int hashId) throws CudfException;
 
   /**
    * Get the number of bytes needed to allocate a validity buffer for the given number of rows.

@@ -21,10 +21,28 @@ package ai.rapids.cudf;
 /**
  * Hash algorithm identifiers, mirroring native enum cudf::hash_id
  */
-enum class HashId {
+public enum HashType {
   // TODO IDENTITY(0),
   // TODO MURMUR3(1),
   HASH_MD5(2);
 
+  private static final HashType[] HASH_TYPES = HashType.values();
   final int nativeId;
+
+  HashType(int nativeId) {
+    this.nativeId = nativeId;
+  }
+  
+  public int getNativeId() {
+    return nativeId;
+  }
+
+  public static HashType fromNative(int nativeId) {
+    for (HashType type : HASH_TYPES) {
+      if (type.nativeId == nativeId) {
+        return type;
+      }
+    }
+    throw new IllegalArgumentException("Could not translate " + nativeId + " into a HashType");
+  }
 }

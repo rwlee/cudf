@@ -13,10 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
+package ai.rapids.cudf;
 
-namespace cudf {
-namespace detail {
+public enum PadSide {
+    LEFT(0),
+    RIGHT(1),
+    BOTH(2);
 
-}  // namespace detail
-}  // namespace cudf
+    private static final PadSide[] PAD_SIDES = PadSide.values();
+    final int nativeId;
+
+    PadSide(int nativeId) {
+        this.nativeId = nativeId;
+    }
+
+    public int getNativeId() {
+        return nativeId;
+    }
+
+    public static PadSide fromNative(int nativeId) {
+        for (PadSide type : PAD_SIDES) {
+            if (type.nativeId == nativeId) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("Could not translate " + nativeId + " into a PadSide");
+    }
+}

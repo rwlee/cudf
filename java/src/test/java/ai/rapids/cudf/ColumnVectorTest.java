@@ -267,41 +267,75 @@ public class ColumnVectorTest extends CudfTestBase {
     }
   }
 
-  // @Test
-  // void testMD5HashEmpty() {
-
-  // }
-
-  // @Test
-  // void testMD5HashTimestamps() {
-
-  // }
-
   @Test
   void testMD5HashStrings() {
-    try (ColumnVector v0 = ColumnVector.fromStrings("0","1","2",null);
-         ColumnVector v1 = ColumnVector.fromStrings(null, "5", "6","7");
-         ColumnVector expected = ColumnVector.fromStrings(
-           "0","1","2",null,
-           null,"5","6","7");
-         ColumnVector v = ColumnVector.md5Hash(v0, v1)) {
-      assertColumnsAreEqual(v, expected);
+    try (ColumnVector v0 = ColumnVector.fromStrings("a", "B\n", "dE\"\u0100\t\u0101 \u0500\u0501", "A very long (greater than 128 bytes/char string) to test a multi hash-step data point in the MD5 hash function. This string needed to be longer.", null, null);
+         ColumnVector v1 = ColumnVector.fromStrings(null, "c", "\\Fg2\'", "A 60 character string to test MD5's message padding algorithm", "hiJ\ud720\ud721\ud720\ud721", null);
+         ColumnVector v2 = ColumnVector.fromStrings("a","B\nc","dE\"\u0100\t\u0101 \u0500\u0501\\Fg2\'", "A very long (greater than 128 bytes/char string) to test a multi hash-step data point in the MD5 hash function. This string needed to be longer.A 60 character string to test MD5's message padding algorithm", "hiJ\ud720\ud721\ud720\ud721", null);
+         ColumnVector result01 = ColumnVector.md5Hash(v0, v1);
+         ColumnVector result2 = ColumnVector.md5Hash(v2);
+         ColumnVector expected = ColumnVector.fromStrings("0cc175b9c0f1b6a831c399e269772661", "f3713034ca7ce7899ce5410c1e425513", "6f64203f6e356a7e75a7141d444f8df8", "8fa29148f63c1fe9248fdc4644e3a193", "a8391ebebea8885359533969150a1672", "d41d8cd98f00b204e9800998ecf8427e")) {
+      assertColumnsAreEqual(result01, expected);
+      assertColumnsAreEqual(result2, expected);
+    }
+  }
+
+  @Test
+  void testMD5HashInts() {
+    try (ColumnVector v0 = ColumnVector.fromInts(0, 100, null, null, Integer.MIN_VALUE, null);
+         ColumnVector v1 = ColumnVector.fromInts(0, null, -100, null, null, Integer.MAX_VALUE);
+         ColumnVector result = ColumnVector.md5Hash(v0, v1);
+         ColumnVector expected = ColumnVector.fromStrings("", "", "", "d41d8cd98f00b204e9800998ecf8427e", "", "")) {
+      assertColumnsAreEqual(result01, expected);
+      assertColumnsAreEqual(result2, expected); 
     }
   }
 
   // @Test
-  // void testMD5HashInts() {
-    
+  // void testMD5HashDoubles() {
+  //   try (ColumnVector v0 = ColumnVector.fromDoubles(0, null, 100, -100, Double.MIN_VALUE, Double.MAX_VALUE, POSITIVE_DOUBLE_NAN_LOWER_RANGE, POSITIVE_DOUBLE_NAN_UPPER_RANGE);
+  //        ColumnVector v1 = ColumnVector.fromDoubles(0, null, 100, -100, Double.MIN_VALUE, Double.MAX_VALUE, NEGATIVE_DOUBLE_NAN_LOWER_RANGE, NEGATIVE_DOUBLE_NAN_UPPER_RANGE);
+  //        ColumnVector result0 = ColumnVector.md5Hash(v0);
+  //        ColumnVector result1 = ColumnVector.md5Hash(v1);
+  //        ColumnVector expected = ColumnVector.fromStrings("", "d41d8cd98f00b204e9800998ecf8427e", "", "", "", "", "", "")) {
+  //     assertColumnsAreEqual(result0, expected);
+  //     assertColumnsAreEqual(result1, expected);
+  //   }
   // }
 
   // @Test
-  // void testMD5HashDoubles() {
-    
+  // void testMD5HashFloats() {
+  //   try (ColumnVector v0 = ColumnVector.fromFloats(0, 100, -100, Float.MIN_VALUE, Float.MAX_VALUE, null, POSITIVE_FLOAT_NAN_LOWER_RANGE, POSITIVE_FLOAT_NAN_UPPER_RANGE);
+  //        ColumnVector v1 = ColumnVector.fromFloats(0, 100, -100, Float.MIN_VALUE, Float.MAX_VALUE, null, NEGATIVE_FLOAT_NAN_LOWER_RANGE, NEGATIVE_FLOAT_NAN_UPPER_RANGE);
+  //        ColumnVector result0 = ColumnVector.md5Hash(v0);
+  //        ColumnVector result1 = ColumnVector.md5Hash(v1);
+  //        ColumnVector expected = ColumnVector.fromStrings("", "", "", "", "", "d41d8cd98f00b204e9800998ecf8427e", "", "")){
+  //     assertColumnsAreEqual(result0, expected);
+  //     assertColumnsAreEqual(result1, expected);
+  //   }
+  // }
+
+  // @Test
+  // void testMD5HashBools() {
+  //   try (ColumnVector v0 = ColumnVector.fromBoxedBool(null, true, false, true, null, false);
+  //        ColumnVector v1 = ColumnVector.fromBoxedBool(null, true, false, null, false, true);
+  //        ColumnVector result = ColumnVector.md5Hash(v0, v1);
+  //        ColumnVector expected = ColumnVector.fromStrings("d41d8cd98f00b204e9800998ecf8427e", "", "", "", "", "")) {
+  //     assertColumnsAreEqual(result, expected);
+  //   }
   // }
 
   // @Test
   // void testMD5HashMixed() {
-
+  //   try (ColumnVector strings = ColumnVector.fromStrings("a", "B\n", "dE\"\u0100\t\u0101 \u0500\u0501", "A very long (greater than 128 bytes/char string) to test a multi hash-step data point in the MD5 hash function. This string needed to be longer.", null, null);
+  //        ColumnVector integers = ColumnVector.fromInts(0, 100, -100, Integer.MIN_VALUE, Integer.MAX_VALUE, null);
+  //        ColumnVector doubles = ColumnVector.fromDoubles(0, Double.MIN_VALUE, DoubleMAX_VALUE, POSITIVE_DOUBLE_NAN_LOWER_RANGE, POSITIVE_DOUBLE_NAN_UPPER_RANGE, null);
+  //        ColumnVector floats = ColumnVector.fromFloats(0, Float.MIN_VALUE, Float.MAX_VALUE, NEGATIVE_FLOAT_NAN_LOWER_RANGE, NEGATIVE_FLOAT_NAN_UPPER_RANGE, null);
+  //        ColumnVector bools = ColumnVector.fromBoxedBool(true, false, null, false, true, null);
+  //        ColumnVector result = ColumnVector.md5Hash(strings, integers, doubles, floats, bools);
+  //        ColumnVector expected = ColumnVector.fromStrings("", "", "", "", "", "d41d8cd98f00b204e9800998ecf8427e")) {
+  //     assertColumnsAreEqual(result, expected);
+  //   }
   // }
 
   @Test
@@ -1642,13 +1676,13 @@ public class ColumnVectorTest extends CudfTestBase {
          ColumnVector expectedDays = ColumnVector.daysFromInts(values);
          ColumnVector days = cv.asTimestampDays();
          ColumnVector expectedUs = ColumnVector.timestampMicroSecondsFromLongs(longValues);
-         ColumnVector us = cv.asTimestampMicroseconds();
+         ColumnVector us = longs.asTimestampMicroseconds();
          ColumnVector expectedNs = ColumnVector.timestampNanoSecondsFromLongs(longValues);
-         ColumnVector ns = cv.asTimestampNanoseconds();
+         ColumnVector ns = longs.asTimestampNanoseconds();
          ColumnVector expectedMs = ColumnVector.timestampMilliSecondsFromLongs(longValues);
-         ColumnVector ms = cv.asTimestampMilliseconds();
+         ColumnVector ms = longs.asTimestampMilliseconds();
          ColumnVector expectedS = ColumnVector.timestampSecondsFromLongs(longValues);
-         ColumnVector s = cv.asTimestampSeconds();) {
+         ColumnVector s = longs.asTimestampSeconds();) {
       assertColumnsAreEqual(expectedUnsignedInts, unsignedInts);
       assertColumnsAreEqual(expectedBytes, bytes);
       assertColumnsAreEqual(expectedUnsignedBytes, unsignedBytes);
@@ -2251,6 +2285,48 @@ public class ColumnVectorTest extends CudfTestBase {
       assertColumnsAreEqual(expected, actual);
     }
 
+  }
+
+  @Test
+  void testLPad() {
+      try (ColumnVector v = ColumnVector.fromStrings("1", "23", "45678", null);
+           ColumnVector expected = ColumnVector.fromStrings("A1", "23", "45678", null);
+           ColumnVector actual = v.pad(2, PadSide.LEFT, "A")) {
+          assertColumnsAreEqual(expected, actual);
+      }
+      try (ColumnVector v = ColumnVector.fromStrings("1", "23", "45678", null);
+           ColumnVector expected = ColumnVector.fromStrings("___1", "__23", "45678", null);
+           ColumnVector actual = v.pad(4, PadSide.LEFT, "_")) {
+          assertColumnsAreEqual(expected, actual);
+      }
+  }
+
+  @Test
+  void testRPad() {
+      try (ColumnVector v = ColumnVector.fromStrings("1", "23", "45678", null);
+           ColumnVector expected = ColumnVector.fromStrings("1A", "23", "45678", null);
+           ColumnVector actual = v.pad(2, PadSide.RIGHT, "A")) {
+          assertColumnsAreEqual(expected, actual);
+      }
+      try (ColumnVector v = ColumnVector.fromStrings("1", "23", "45678", null);
+           ColumnVector expected = ColumnVector.fromStrings("1___", "23__", "45678", null);
+           ColumnVector actual = v.pad(4, PadSide.RIGHT, "_")) {
+          assertColumnsAreEqual(expected, actual);
+      }
+  }
+
+  @Test
+  void testPad() {
+      try (ColumnVector v = ColumnVector.fromStrings("1", "23", "45678", null);
+           ColumnVector expected = ColumnVector.fromStrings("1A", "23", "45678", null);
+           ColumnVector actual = v.pad(2, PadSide.BOTH, "A")) {
+          assertColumnsAreEqual(expected, actual);
+      }
+      try (ColumnVector v = ColumnVector.fromStrings("1", "23", "45678", null);
+           ColumnVector expected = ColumnVector.fromStrings("_1__", "_23_", "45678", null);
+           ColumnVector actual = v.pad(4, PadSide.BOTH, "_")) {
+          assertColumnsAreEqual(expected, actual);
+      }
   }
 
   @Test
