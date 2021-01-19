@@ -94,6 +94,7 @@ public final class DType {
     public int getNativeId() { return nativeId; }
 
     public boolean isDecimalType() { return DType.DECIMALS.contains(this); }
+    public boolean isDecimal64Type() {return DType.DECIMALSONLY64.contains(this);}
   }
 
   final DTypeEnum typeId;
@@ -138,6 +139,8 @@ public final class DType {
   public static final DType DURATION_NANOSECONDS = new DType(DTypeEnum.DURATION_NANOSECONDS);
   public static final DType STRING = new DType(DTypeEnum.STRING);
   public static final DType LIST = new DType(DTypeEnum.LIST);
+  public static final DType DECIMAL32 = new DType(DTypeEnum.DECIMAL32);
+  public static final DType DECIMAL64 = new DType(DTypeEnum.DECIMAL64);
   public static final DType STRUCT = new DType(DTypeEnum.STRUCT);
 
   /* This is used in fromNative method to return singleton object for non-decimal types.
@@ -371,6 +374,7 @@ public final class DType {
    *       DType.DECIMAL64
    */
   public boolean isDecimalType() { return this.typeId.isDecimalType(); }
+  public boolean isDecimal64Type() { return this.typeId.isDecimal64Type(); }
 
   /**
    * Returns true for duration types
@@ -460,6 +464,9 @@ public final class DType {
 
   private static final EnumSet<DTypeEnum> DECIMALS = EnumSet.of(
       DTypeEnum.DECIMAL32,
+      DTypeEnum.DECIMAL64
+  );
+  private static final EnumSet<DTypeEnum> DECIMALSONLY64 = EnumSet.of(
       DTypeEnum.DECIMAL64
   );
 

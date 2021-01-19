@@ -220,7 +220,17 @@ public final class Scalar implements AutoCloseable, BinaryOperable {
     return new Scalar(DType.create(DType.DTypeEnum.DECIMAL32, scale), handle);
   }
 
+  public static Scalar fromDecimal32(int scale, int unscaledValue) {
+    long handle = makeDecimal32Scalar(unscaledValue, scale, true);
+    return new Scalar(DType.create(DType.DTypeEnum.DECIMAL32, scale), handle);
+  }
+
   public static Scalar fromDecimal(int scale, long unscaledValue) {
+    long handle = makeDecimal64Scalar(unscaledValue, scale, true);
+    return new Scalar(DType.create(DType.DTypeEnum.DECIMAL64, scale), handle);
+  }
+
+  public static Scalar fromDecimal64(int scale, long unscaledValue) {
     long handle = makeDecimal64Scalar(unscaledValue, scale, true);
     return new Scalar(DType.create(DType.DTypeEnum.DECIMAL64, scale), handle);
   }
